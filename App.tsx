@@ -1447,7 +1447,7 @@ const HomePage = () => {
   const status = isStoreOpen ? 'open' : 'closed';
 
   return (
-    <div className="bg-[#f6f6f6] min-h-screen">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-orange-50/20 animate-fade-in">
       {/* Cover Image with Overlapping Logo */}
       <div className="relative">
         {/* Cover Image - Only show if bannerUrl exists */}
@@ -1480,34 +1480,48 @@ const HomePage = () => {
 
       <div className="px-4 -mt-0">
         {/* Status Badge */}
-        {/* Category Shortcuts */}
-        <div className="flex flex-wrap justify-center gap-2 mb-6 pt-2">
+        {/* Category Shortcuts - Modernized */}
+        <div className="flex flex-wrap justify-center gap-3 mb-8 pt-2 px-2">
           {categories.filter(cat => cat.active !== false).map(cat => (
             <button
               key={cat.id}
               onClick={() => {
                 const element = document.getElementById(`cat-${cat.id}`);
                 if (element) {
-                  element.scrollIntoView({ behavior: 'smooth' });
+                  element.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }
               }}
-              className="bg-white border border-gray-200 hover:border-purple-500 hover:bg-purple-50 text-gray-700 hover:text-purple-700 px-4 py-2 rounded-full text-sm font-bold shadow-sm transition-all flex items-center gap-2"
+              className="group relative glass hover-lift px-5 py-3 rounded-2xl text-sm font-semibold shadow-md transition-smooth overflow-hidden"
             >
-              <span className="text-lg">{cat.icon}</span>
-              {cat.title}
+              {/* Gradient Overlay on Hover */}
+              <div className="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-10 transition-opacity duration-300" />
+
+              {/* Content */}
+              <div className="relative flex items-center gap-2.5">
+                <span className="text-2xl transform group-hover:scale-110 transition-transform duration-300">{cat.icon}</span>
+                <span className="text-gray-700 group-hover:text-gray-900 font-display">{cat.title}</span>
+              </div>
+
+              {/* Animated Border */}
+              <div className="absolute inset-0 rounded-2xl border-2 border-transparent group-hover:border-orange-400/30 transition-colors duration-300" />
             </button>
           ))}
         </div>
 
-        {/* Categories */}
-        <div className="space-y-5">
+        {/* Categories - Modernized */}
+        <div className="space-y-8">
           {categories.filter(cat => cat.active !== false).map(cat => {
             const catProducts = products.filter(p => p.categoryId === cat.id && p.active !== false);
             return (
-              <div key={cat.id} id={`cat-${cat.id}`}>
-                <h2 className="text-xl font-bold text-gray-700 mb-3 pl-1 flex items-center gap-2">
-                  {cat.title} {cat.icon}
-                </h2>
+              <div key={cat.id} id={`cat-${cat.id}`} className="animate-slide-up">
+                {/* Modern Category Header */}
+                <div className="relative mb-4 pl-1">
+                  <h2 className="text-2xl font-display font-bold mb-1 flex items-center gap-3">
+                    <span className="gradient-text">{cat.title}</span>
+                    <span className="text-3xl animate-pulse-slow">{cat.icon}</span>
+                  </h2>
+                  <div className="h-1 w-20 bg-gradient-primary rounded-full" />
+                </div>
                 {/* Horizontal scrolling container */}
                 {catProducts.length === 0 ? (
                   <div className="bg-gray-50 border border-gray-200 rounded-lg py-8 px-4 text-center">

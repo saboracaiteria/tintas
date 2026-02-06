@@ -1,3 +1,103 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Custom Utility Classes */
+@layer utilities {
+
+    /* Animated Gradients */
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, #ff6b00 0%, #ff8f3c 100%);
+    }
+
+    .bg-gradient-secondary {
+        background: linear-gradient(135deg, #0056b3 0%, #0074e4 100%);
+    }
+
+    .bg-gradient-warm {
+        background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+    }
+
+    .bg-gradient-cool {
+        background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+    }
+
+    /* Custom Shadows */
+    .shadow-glow-orange {
+        box-shadow: 0 0 20px rgba(255, 107, 0, 0.3);
+    }
+
+    .shadow-glow-blue {
+        box-shadow: 0 0 20px rgba(0, 86, 179, 0.3);
+    }
+
+    /* Smooth Transitions */
+    .transition-smooth {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .transition-bounce {
+        transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+
+    /* Backdrop Blur */
+    .backdrop-blur-glass {
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+    }
+}
+
+@layer components {
+
+    /* Modern Card */
+    .card-modern {
+        @apply bg-white rounded-2xl shadow-md hover:shadow-xl transition-smooth;
+        @apply border border-gray-100;
+    }
+
+    /* Animated Button */
+    .btn-primary {
+        @apply bg-gradient-primary text-white font-semibold px-6 py-3 rounded-xl;
+        @apply shadow-md hover:shadow-xl transition-smooth;
+        @apply hover:scale-105 active:scale-95;
+    }
+
+    .btn-secondary {
+        @apply bg-gradient-secondary text-white font-semibold px-6 py-3 rounded-xl;
+        @apply shadow-md hover:shadow-xl transition-smooth;
+        @apply hover:scale-105 active:scale-95;
+    }
+
+    /* Category Card */
+    .category-card {
+        @apply relative overflow-hidden rounded-2xl;
+        @apply transform transition-smooth hover:scale-105;
+        @apply shadow-md hover:shadow-xl;
+    }
+
+    /* Product Card */
+    .product-card {
+        @apply card-modern overflow-hidden;
+        @apply transform hover:-translate-y-2;
+    }
+}
+
+/* Animation Keyframes */
+@keyframes shimmer {
+    0% {
+        background-position: -1000px 0;
+    }
+
+    100% {
+        background-position: 1000px 0;
+    }
+}
+
+.animate-shimmer {
+    animation: shimmer 2s infinite linear;
+    background: linear-gradient(to right,
+            transparent 0%,
+            rgba(255, 255, 255, 0.3) 50%,
+            transparent 100%);
+    background-size: 1000px 100%;
+}

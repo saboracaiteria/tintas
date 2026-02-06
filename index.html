@@ -5,24 +5,47 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Casa das Cores - Tintas e Acabamentos</title>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
       theme: {
         extend: {
           fontFamily: {
-            sans: ['Roboto', 'sans-serif'],
+            sans: ['Inter', 'sans-serif'],
+            display: ['Outfit', 'sans-serif'],
           },
           colors: {
             brand: {
-              purple: 'var(--color-header-bg)',
-              red: 'var(--color-button-primary)',
-              green: '#4caf50',
+              orange: 'var(--color-header-bg)',
+              blue: 'var(--color-button-primary)',
+              green: '#10b981',
               dark: 'var(--color-text-primary)',
               bg: 'var(--color-background)',
             }
-          }
+          },
+          animation: {
+            'fade-in': 'fadeIn 0.5s ease-out',
+            'slide-up': 'slideUp 0.6s ease-out',
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'scale-in': 'scaleIn 0.3s ease-out',
+          },
+          keyframes: {
+            fadeIn: {
+              '0%': { opacity: '0' },
+              '100%': { opacity: '1' },
+            },
+            slideUp: {
+              '0%': { transform: 'translateY(20px)', opacity: '0' },
+              '100%': { transform: 'translateY(0)', opacity: '1' },
+            },
+            scaleIn: {
+              '0%': { transform: 'scale(0.95)', opacity: '0' },
+              '100%': { transform: 'scale(1)', opacity: '1' },
+            },
+          },
         }
       }
     }
@@ -32,13 +55,28 @@
     :root {
       --color-header-bg: #ff6b00;
       --color-header-text: #ffffff;
-      --color-background: #f4f6f8;
+      --color-background: #f8fafc;
       --color-card-bg: #ffffff;
-      --color-card-text: #333333;
+      --color-card-text: #1e293b;
       --color-button-primary: #0056b3;
       --color-button-text: #ffffff;
-      --color-text-primary: #1e1e1e;
-      --color-text-secondary: #666666;
+      --color-text-primary: #0f172a;
+      --color-text-secondary: #64748b;
+
+      /* Modern Additions */
+      --gradient-primary: linear-gradient(135deg, #ff6b00 0%, #ff8f3c 100%);
+      --gradient-secondary: linear-gradient(135deg, #0056b3 0%, #0074e4 100%);
+      --gradient-hero: linear-gradient(135deg, rgba(255, 107, 0, 0.1) 0%, rgba(0, 86, 179, 0.1) 100%);
+      --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.04);
+      --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+      --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.12);
+      --shadow-xl: 0 20px 50px rgba(0, 0, 0, 0.15);
+      --blur-glass: blur(12px);
+    }
+
+    /* Smooth Scrolling */
+    html {
+      scroll-behavior: smooth;
     }
 
     /* Hide scrollbar for horizontal scrolling */
@@ -52,7 +90,49 @@
     }
 
     body {
-      background-color: var(--color-background);
+      background: linear-gradient(to bottom, #f8fafc 0%, #e2e8f0 100%);
+      min-height: 100vh;
+    }
+
+    /* Glassmorphism Utility */
+    .glass {
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: var(--blur-glass);
+      -webkit-backdrop-filter: var(--blur-glass);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .glass-dark {
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: var(--blur-glass);
+      -webkit-backdrop-filter: var(--blur-glass);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    /* Hover Animations */
+    .hover-lift {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .hover-lift:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .hover-scale {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .hover-scale:hover {
+      transform: scale(1.05);
+    }
+
+    /* Gradient Text */
+    .gradient-text {
+      background: var(--gradient-primary);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
   </style>
   <script type="importmap">

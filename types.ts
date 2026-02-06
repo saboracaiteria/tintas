@@ -118,6 +118,8 @@ export interface ThemeColors {
   buttonText: string;    // Cor do texto dos botões
   textPrimary: string;   // Cor do texto principal
   textSecondary: string; // Cor do texto secundário
+  footerBg?: string;     // Cor de fundo do rodapé
+  footerText?: string;   // Cor do texto do rodapé
 }
 
 export interface GlobalSettings {
@@ -141,6 +143,8 @@ export interface GlobalSettings {
     buttonText?: string;    // #FFFFFF
     textPrimary?: string;
     textSecondary?: string;
+    footerBg?: string;      // Cor de fundo do rodapé
+    footerText?: string;    // Cor do texto do rodapé
   };
   // Text customization
   closedMessage?: string;
