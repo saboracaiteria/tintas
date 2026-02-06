@@ -30,6 +30,7 @@ import { ImageCropModal } from './ImageCropModal';
 import { InventoryPage } from './InventoryPage';
 import { ConfirmModal } from './ConfirmModal';
 import { InvoiceImporter } from './InvoiceImporter';
+import { ImageContextMenu } from './ImageContextMenu';
 import { supabase, isConfigured } from './supabaseClient';
 import {
   mockCategories,
@@ -122,7 +123,7 @@ const Footer = () => {
         {/* Location & Year */}
         <div className="text-center mb-3">
           <p className="text-sm">{settings.businessAddress || "Canaã dos Carajás - PA"}</p>
-          <p className="text-xs text-gray-400 mt-1">{settings.copyrightText || "© 2025-2026 Obba Açaí"}</p>
+          <p className="text-xs text-gray-400 mt-1">{settings.copyrightText || "© 2025 Casa das Cores"}</p>
         </div>
 
         {/* Developer Credit */}
@@ -198,6 +199,14 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
+export const useApp = () => {
+  const context = useContext(AppContext);
+  if (context === undefined) {
+    throw new Error('useApp must be used within an AppProvider');
+  }
+  return context;
+};
+
 const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Dados locais (apenas carrinho e estado da UI)
   const [cart, setCart, cartLoaded] = usePersistedState<CartItem[]>('cart', []);
@@ -234,6 +243,10 @@ const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       background: '#f4f6f8'
     }
   });
+
+  // DEBUG: Verificar o que está carregado
+  console.log("DEBUG APP: Products count:", products.length);
+  if (products.length > 0) console.log("DEBUG APP: First product:", products[0].name);
 
   // Reactive Store Status
   const [isStoreOpen, setIsStoreOpen] = useState(false);
@@ -420,8 +433,8 @@ const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           fetchSettings().catch(e => console.error('Erro settings:', e))
         ]);
       } else {
-        // Offline Mode: Load mock data (Sabor Açaíteria)
-        console.warn("⚠️ MODO OFFLINE: Carregando dados mock da Sabor Açaíteria...");
+        // Offline Mode: Load mock data (Casa das Cores)
+        console.warn("⚠️ MODO OFFLINE: Carregando dados mock da Casa das Cores...");
         setProducts(mockProducts);
         setCategories(mockCategories);
         setGroups(mockGroups);
@@ -461,7 +474,13 @@ const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   };
 
   const fetchCategories = async () => {
-    const { data } = await supabase.from('categories').select('*').order('display_order', { ascending: true });
+    const { data, error } = await supabase.from('categories').select('*');
+
+    if (error) {
+      console.error("ERRO CRÍTICO BUSCANDO CATEGORIAS:", error);
+      // alert("ERRO SUPABASE: " + error.message); // Opcional, descomentar se quiser ver na tela
+    }
+
     if (data) {
       const mappedCategories: Category[] = data.map(c => ({
         id: c.id,
@@ -471,6 +490,7 @@ const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         active: c.active ?? true
       }));
       setCategories(mappedCategories);
+      console.log("Categorias carregadas:", mappedCategories.length);
     }
   };
 
@@ -558,7 +578,7 @@ const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         deliveryCloseTime: data.delivery_close_time || '21:00',
         instagramUrl: data.instagram_url,
         businessAddress: data.business_address,
-        copyrightText: data.copyright_text
+        copyrightText: data.copyright_text || "© 2025 Casa das Cores"
       });
     }
   };
@@ -692,8 +712,24 @@ const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       return;
     }
     // Wait for ID from DB for insert usually, so manual optimistic update is harder without ID.
-    // relying on realtime for add is okay.
-    await supabase.from('categories').insert([{ title: c.title, icon: c.icon }]);
+    const { data, error } = await supabase.from('categories').insert([{ title: c.title, icon: c.icon }]).select();
+
+    if (error) {
+      console.error("ERRO AO CRIAR CATEGORIA:", error);
+      alert("Erro ao criar categoria: " + error.message);
+      return;
+    }
+
+    if (data && data.length > 0) {
+      const newCategory = {
+        id: data[0].id,
+        title: data[0].title,
+        icon: data[0].icon,
+        displayOrder: data[0].display_order ?? 0,
+        active: data[0].active ?? true
+      };
+      setCategories(prev => [...prev, newCategory]);
+    }
   };
 
   const updateCategory = async (c: Category) => {
@@ -970,11 +1006,7 @@ const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   );
 };
 
-const useApp = () => {
-  const context = useContext(AppContext);
-  if (!context) throw new Error("useApp must be used within AppProvider");
-  return context;
-};
+
 
 // --- Components ---
 
@@ -1116,7 +1148,13 @@ const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
         onClick={handleAdd}
       >
         <div className="h-[130px] w-full overflow-hidden">
-          <img src={product.image} alt={product.name} className="w-full h-full object-cover transition-transform duration-300 ease-out hover:scale-105" />
+          <img
+            src={product.image}
+            alt={product.name}
+            className="w-full h-full object-cover transition-transform duration-300 ease-out hover:scale-105"
+            data-img-type="product"
+            data-img-id={product.id}
+          />
         </div>
         <div className="p-2.5 flex flex-col h-[125px]">
           <h3 className="font-bold text-gray-800 text-[13px] leading-tight mb-1.5 line-clamp-2 h-9">{product.name}</h3>
@@ -1416,6 +1454,7 @@ const HomePage = () => {
               src={settings.bannerUrl}
               alt="Cover"
               className="w-full h-full object-cover"
+              data-img-type="banner"
             />
           </div>
         )}
@@ -1427,6 +1466,7 @@ const HomePage = () => {
               src={settings.logoUrl}
               alt="Logo"
               className={`w-32 h-32 object-cover ${settings.logoShape === 'circle' ? 'rounded-full' : 'rounded-lg'} border border-white`}
+              data-img-type="logo"
             />
           </div>
         </div>
@@ -1437,48 +1477,23 @@ const HomePage = () => {
 
       <div className="px-4 -mt-0">
         {/* Status Badge */}
-        <div className="flex flex-col items-center gap-2 -mt-0 mb-3 pt-2">
-          {status === 'closed' ? (
-            <span className="bg-red-600 text-white px-6 py-2 rounded-md font-medium text-sm shadow-sm uppercase tracking-wide">
-              {settings.closedMessage || '🔴 Loja Fechada'}
-            </span>
-          ) : (
-            <span className="bg-[#4caf50] text-white px-6 py-2 rounded-md font-medium text-sm shadow-sm uppercase tracking-wide">
-              {settings.openMessage || '🟢 Aberto até às 23:00'}
-            </span>
-          )}
-          {settings.deliveryOnly && status === 'open' && (
-            <span className="bg-orange-500 text-white px-4 py-1.5 rounded-md font-medium text-xs shadow-sm">
-              📦 Aceitando pedidos para retirada
-            </span>
-          )}
-        </div>
-
-        {/* Info Rows */}
-        <div className="flex justify-between items-center bg-transparent mb-3 px-2">
-          <div className="flex flex-col items-center flex-1">
-            <div className="flex items-center gap-1 text-gray-700 font-bold text-sm">
-              <Clock size={16} /> Entrega
-            </div>
-            <span className="text-gray-600 text-xs font-medium">{settings.deliveryTime || '40min à 1h'}</span>
-          </div>
-          <div className="flex flex-col items-center flex-1">
-            <div className="flex items-center gap-1 text-gray-700 font-bold text-sm">
-              <Clock size={16} /> Retirada
-            </div>
-            <span className="text-gray-600 text-xs font-medium">{settings.pickupTime || '20min à 45min'}</span>
-          </div>
-        </div>
-
-        {/* Hours Link */}
-        <div className="flex justify-center items-center gap-1 text-gray-600 mb-3">
-          <Info size={16} />
-          <span className="font-bold text-sm">Horários</span>
-        </div>
-
-        {/* Warning Alert */}
-        <div className="border border-red-200 bg-red-50 text-red-600 px-4 py-3 rounded-md mb-4 text-center text-sm font-medium">
-          Entregas somente até as {settings.deliveryCloseTime || '21:00'}hrs!
+        {/* Category Shortcuts */}
+        <div className="flex flex-wrap justify-center gap-2 mb-6 pt-2">
+          {categories.filter(cat => cat.active !== false).map(cat => (
+            <button
+              key={cat.id}
+              onClick={() => {
+                const element = document.getElementById(`cat-${cat.id}`);
+                if (element) {
+                  element.scrollIntoView({ behavior: 'smooth' });
+                }
+              }}
+              className="bg-white border border-gray-200 hover:border-purple-500 hover:bg-purple-50 text-gray-700 hover:text-purple-700 px-4 py-2 rounded-full text-sm font-bold shadow-sm transition-all flex items-center gap-2"
+            >
+              <span className="text-lg">{cat.icon}</span>
+              {cat.title}
+            </button>
+          ))}
         </div>
 
         {/* Categories */}
@@ -3003,7 +3018,7 @@ const SettingsPage = () => {
                 type="text"
                 value={settings.copyrightText || ''}
                 onChange={(e) => updateSettings({ copyrightText: e.target.value })}
-                placeholder="Ex: © 2025-2026 Obba Açaí"
+                placeholder="Ex: © 2025 Casa das Cores"
                 className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-purple-500 outline-none"
               />
             </div>
@@ -3560,13 +3575,16 @@ const AppContent = () => {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-brand-purple">
         <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-white mb-4"></div>
-        <p className="text-white text-lg font-bold animate-pulse">Carregando sabor acaiteria...</p>
+        <p className="text-white text-lg font-bold animate-pulse">SUAS CORES PREFERIDAS SOMENTE AQUI</p>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-gray-50 md:pb-0">
+      {/* DEBUG BANNER - FORCED VISIBILITY */}
+      {/* DEBUG BANNER REMOVED */}
+
       <ExitModal
         isOpen={showExitModal}
         onClose={() => setShowExitModal(false)}
@@ -3666,6 +3684,7 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { has
 const App = () => {
   return (
     <AppProvider>
+      <ImageContextMenu />
       <PrinterProvider>
         <ErrorBoundary>
           <HashRouter>

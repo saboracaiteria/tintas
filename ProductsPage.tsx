@@ -262,7 +262,7 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({
                 const categoryProducts = products
                     .filter(p => p.categoryId === category.id)
                     .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
-                if (categoryProducts.length === 0) return null;
+                // if (categoryProducts.length === 0) return null; // FIX: Show empty categories
 
                 return (
                     <div key={category.id} className="mb-6">
@@ -270,6 +270,11 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({
                             {category.icon} {category.title}
                         </h2>
                         <div className="space-y-2">
+                            {categoryProducts.length === 0 && (
+                                <div className="text-gray-400 text-sm italic p-4 text-center border-2 border-dashed border-gray-200 rounded-lg">
+                                    Nenhum produto nesta categoria. Clique em "+ Novo" para adicionar.
+                                </div>
+                            )}
                             {categoryProducts.map(product => (
                                 <div
                                     key={product.id}
@@ -344,6 +349,8 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({
                                                 src={product.image}
                                                 alt={product.name}
                                                 className={`w-16 h-16 rounded object-cover ${(product.active ?? true) ? '' : 'opacity-40 grayscale'}`}
+                                                data-img-type="product"
+                                                data-img-id={product.id}
                                             />
                                             <div className={`flex-1 ${(product.active ?? true) ? '' : 'opacity-50'}`}>
                                                 <p className="font-bold">{product.name}</p>
@@ -457,7 +464,7 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({
                             value={editingProduct.categoryId || ''}
                             onChange={e => setEditingProduct({ ...editingProduct, categoryId: e.target.value })}
                         >
-                            <option value="">Selecione a Categoria</option>
+                            <option value="">Selecione a Categoria ({categories.length} disponíveis)</option>
                             {categories.map(cat => (
                                 <option key={cat.id} value={cat.id}>{cat.icon} {cat.title}</option>
                             ))}

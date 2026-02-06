@@ -18,8 +18,17 @@ const supabaseAnonKey = localKey || envKey || '';
 const isValidUrl = supabaseUrl && supabaseUrl.startsWith('http') && !supabaseUrl.includes('YOUR_');
 const isValidKey = supabaseAnonKey && supabaseAnonKey.length > 20 && !supabaseAnonKey.includes('YOUR_');
 
-// export const isConfigured = !!(isValidUrl && isValidKey);
-export const isConfigured = false; // FORCED OFFLINE - Disconnected for new project
+console.log("LOG DIAGNOSTICO SUPABASE:", {
+    url: supabaseUrl ? (supabaseUrl.substring(0, 10) + '...') : 'MISSING',
+    keyValid: isValidKey,
+    isConfigured: !!(isValidUrl && isValidKey)
+});
+
+if (!isValidUrl) console.error("❌ SUPABASE URL INVÁLIDA NO FRONTEND");
+if (!isValidKey) console.error("❌ SUPABASE KEY INVÁLIDA NO FRONTEND");
+
+export const isConfigured = !!(isValidUrl && isValidKey);
+// export const isConfigured = false; // FORCED OFFLINE - Disconnected for new project
 
 // Evitar crash se estiver vazio (retorna cliente dummy ou validado)
 // Se não tiver url válida, criamos um cliente dummy que nunca será usado
