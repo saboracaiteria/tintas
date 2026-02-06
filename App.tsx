@@ -102,8 +102,11 @@ const usePersistedState = <T,>(key: string, initialValue: T) => {
 const Footer = () => {
   const { settings } = useApp();
 
+  const footerBg = settings.themeColors?.footerBg || '#1f2937'; // gray-800
+  const footerText = settings.themeColors?.footerText || '#d1d5db'; // gray-300
+
   return (
-    <div className="bg-gray-800 text-gray-300 py-6 px-4 mt-12">
+    <div className="py-6 px-4 mt-12" style={{ backgroundColor: footerBg, color: footerText }}>
       <div className="max-w-4xl mx-auto">
         {/* Instagram Link */}
         <div className="flex justify-center mb-4">
@@ -3309,6 +3312,8 @@ const ThemeSettingsPage = () => {
     { key: 'buttonText', label: 'Texto do Botão', default: '#ffffff' },
     { key: 'textPrimary', label: 'Texto Principal', default: '#1e1e1e' },
     { key: 'textSecondary', label: 'Texto Secundário', default: '#666666' },
+    { key: 'footerBg', label: 'Fundo do Rodapé', default: '#1f2937' },
+    { key: 'footerText', label: 'Texto do Rodapé', default: '#d1d5db' },
   ];
 
   const handleColorChange = (key: string, value: string) => {
