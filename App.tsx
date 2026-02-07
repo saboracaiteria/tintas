@@ -1,5 +1,3 @@
-
-
 import React, { useState, createContext, useContext, useEffect, useMemo, useRef } from 'react';
 import { HashRouter, Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -8,15 +6,21 @@ import {
   ChevronLeft, ChevronDown, ChevronUp, Edit, FileText,
   Settings, BarChart2, List, Folder, LogOut, CheckCircle,
   Printer, Tag, ToggleLeft, ToggleRight, Upload, Info, ArrowLeft, AlertCircle,
-  Lock as LockIcon, Palette, Package, MessageSquare, Sparkles
+  Lock as LockIcon, Palette, Package, MessageSquare, Sparkles, Layout,
+  Star, Heart, Share2, Store, MessageCircle, Check, Filter, Camera, ImageIcon
 } from 'lucide-react';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Preferences } from '@capacitor/preferences';
 import { usePrinter } from './PrinterContext';
+import { createSupabaseClient } from './lib/supabase';
+import { MLHeader } from './src/components/MLHeader';
+import { MLProductCard } from './src/components/MLProductCard';
+import { MLProductDetails } from './src/components/MLProductDetails';
 import {
   CATEGORIES, PRODUCTS, GROUPS, WHATSAPP_NUMBER, LOGO_URL,
   PAYMENT_METHODS, INITIAL_COUPONS, MOCK_ORDERS
 } from './constants';
+import { AppContext, useApp } from './src/context/AppContext';
 import {
   Category, Product, ProductGroup, CartItem, ProductOption,
   GlobalSettings, Role, Coupon, OrderRecord, OrderStatus, DeliveryMethod, OpeningHour
@@ -72,7 +76,7 @@ const usePersistedState = <T,>(key: string, initialValue: T) => {
           setState(JSON.parse(value));
         }
       } catch (error) {
-        console.error(`Error loading ${key} from Preferences:`, error);
+        console.error(`Error loading ${key} from Preferences: `, error);
       } finally {
         setIsLoaded(true);
       }
@@ -88,7 +92,7 @@ const usePersistedState = <T,>(key: string, initialValue: T) => {
       try {
         await Preferences.set({ key, value: JSON.stringify(state) });
       } catch (error) {
-        console.error(`Error saving ${key} to Preferences:`, error);
+        console.error(`Error saving ${key} to Preferences: `, error);
         // Basic check for storage issues (though Preferences handles this differently than localStorage)
       }
     };
@@ -150,65 +154,7 @@ const Footer = () => {
 
 // --- Context ---
 
-interface AppContextType {
-  products: Product[];
-  categories: Category[];
-  groups: ProductGroup[];
-  cart: CartItem[];
-  settings: GlobalSettings;
-  coupons: Coupon[];
-  orders: OrderRecord[];
-  adminRole: Role;
-  appliedCoupon: Coupon | null;
-  applyCoupon: (code: string) => { success: boolean; message: string };
-  removeCoupon: () => void;
-
-  addToCart: (item: CartItem) => void;
-  removeFromCart: (cartId: string) => void;
-  updateCartQuantity: (cartId: string, quantity: number) => void;
-  updateCartNote: (cartId: string, note: string) => void;
-  clearCart: () => void;
-
-  addProduct: (product: Product) => void;
-  updateProduct: (product: Product) => void;
-  deleteProduct: (id: string) => void;
-  reorderProducts: (categoryId: string, products: Product[]) => void;
-
-  addCategory: (category: Category) => void;
-  updateCategory: (category: Category) => void;
-  deleteCategory: (id: string) => void;
-
-  addGroup: (group: ProductGroup) => void;
-  updateGroup: (group: ProductGroup) => void;
-  deleteGroup: (id: string) => void;
-
-  addCoupon: (coupon: Coupon) => void;
-  updateCoupon: (coupon: Coupon) => void;
-  deleteCoupon: (id: string) => void;
-
-  updateSettings: (newSettings: Partial<GlobalSettings>) => void;
-  setAdminRole: (role: Role) => void;
-  addOrder: (order: OrderRecord) => void;
-  updateOrderStatus: (id: string, status: OrderStatus) => void;
-  deleteOrder: (id: string) => void;
-  copyOrderToClipboard: (order: OrderRecord) => void;
-
-  checkStoreStatus: () => 'open' | 'closed';
-  isStoreOpen: boolean;
-  isSidebarOpen: boolean;
-  setSidebarOpen: (open: boolean) => void;
-  loading: boolean;
-}
-
-const AppContext = createContext<AppContextType | undefined>(undefined);
-
-export const useApp = () => {
-  const context = useContext(AppContext);
-  if (context === undefined) {
-    throw new Error('useApp must be used within an AppProvider');
-  }
-  return context;
-};
+// Context definitions moved to src/context/AppContext.tsx to fix circular dependency
 
 const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Dados locais (apenas carrinho e estado da UI)
@@ -455,8 +401,8 @@ const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   const fetchProducts = async () => {
     const { data } = await supabase.from('products').select(`
-      *,
-      product_group_relations (group_id)
+  *,
+  product_group_relations(group_id)
     `).order('display_order', { ascending: true });
 
     if (data) {
@@ -470,7 +416,15 @@ const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         categoryId: p.category_id,
         groupIds: p.product_group_relations?.map((r: any) => r.group_id) || [],
         displayOrder: p.display_order ?? 0,
-        active: p.active ?? true
+        active: p.active ?? true,
+        // New Interface Fields
+        salesCountText: p.sales_count_text,
+        shippingText: p.shipping_text,
+        shippingTimerText: p.shipping_timer_text,
+        stockText: p.stock_text,
+        trustBadge1: p.trust_badge_1,
+        trustBadge2: p.trust_badge_2,
+        trustBadge3: p.trust_badge_3
       }));
       setProducts(mappedProducts);
     }
@@ -499,8 +453,8 @@ const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   const fetchGroups = async () => {
     const { data } = await supabase.from('product_groups').select(`
-      *,
-      options:product_options(*)
+  *,
+  options: product_options(*)
     `);
 
     if (data) {
@@ -581,7 +535,9 @@ const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         deliveryCloseTime: data.delivery_close_time || '21:00',
         instagramUrl: data.instagram_url,
         businessAddress: data.business_address,
-        copyrightText: data.copyright_text || "© 2025 Casa das Cores"
+        businessAddress: data.business_address,
+        copyrightText: data.copyright_text || "© 2025 Casa das Cores",
+        productDetailSettings: data.product_detail_settings || {}
       });
     }
   };
@@ -642,7 +598,15 @@ const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       description: p.description,
       price: p.price,
       image: p.image,
-      category_id: p.categoryId
+      category_id: p.categoryId,
+      // New Interface Fields
+      sales_count_text: p.salesCountText,
+      shipping_text: p.shippingText,
+      shipping_timer_text: p.shippingTimerText,
+      stock_text: p.stockText,
+      trust_badge_1: p.trustBadge1,
+      trust_badge_2: p.trustBadge2,
+      trust_badge_3: p.trustBadge3
     }]).select().single();
 
     if (error || !productData) {
@@ -671,7 +635,15 @@ const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       price: p.price,
       image: p.image,
       category_id: p.categoryId,
-      active: p.active // Include active status
+      active: p.active, // Include active status
+      // New Interface Fields
+      sales_count_text: p.salesCountText,
+      shipping_text: p.shippingText,
+      shipping_timer_text: p.shippingTimerText,
+      stock_text: p.stockText,
+      trust_badge_1: p.trustBadge1,
+      trust_badge_2: p.trustBadge2,
+      trust_badge_3: p.trustBadge3
     }).eq('id', p.id);
 
     // 2. Atualizar relações (remover todas e adicionar novas)
@@ -877,7 +849,11 @@ const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     if (s.deliveryCloseTime !== undefined) dbSettings.delivery_close_time = s.deliveryCloseTime;
     if (s.instagramUrl !== undefined) dbSettings.instagram_url = s.instagramUrl;
     if (s.businessAddress !== undefined) dbSettings.business_address = s.businessAddress;
+    if (s.businessAddress !== undefined) dbSettings.business_address = s.businessAddress;
+    if (s.businessAddress !== undefined) dbSettings.business_address = s.businessAddress;
     if (s.copyrightText !== undefined) dbSettings.copyright_text = s.copyrightText;
+    if (s.productDetailSettings !== undefined) dbSettings.product_detail_settings = s.productDetailSettings;
+    if (s.productDetailSettings !== undefined) dbSettings.product_detail_settings = s.productDetailSettings;
 
     await supabase.from('settings').update(dbSettings).eq('id', 1);
   };
@@ -916,7 +892,7 @@ const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
     if (error) {
       console.error('Erro ao deletar pedido:', error);
-      alert(`Erro ao deletar pedido: ${error.message}`);
+      alert(`Erro ao deletar pedido: ${error.message} `);
       return;
     }
 
@@ -928,7 +904,7 @@ const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const copyOrderToClipboard = (order: OrderRecord) => {
     // Format order details similar to WhatsApp message
     const itemsText = order.fullDetails.map(i => {
-      let txt = `${i.quantity}x ${i.product.name}`;
+      let txt = `${i.quantity}x ${i.product.name} `;
 
       // Get option names from groups
       const selectedOptionsText: string[] = [];
@@ -937,7 +913,7 @@ const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           for (const group of groups) {
             const option = group.options.find(opt => opt.id === optionId);
             if (option) {
-              selectedOptionsText.push(`${option.name} ${qty}x`);
+              selectedOptionsText.push(`${option.name} ${qty} x`);
               break;
             }
           }
@@ -945,21 +921,21 @@ const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       });
 
       if (selectedOptionsText.length > 0) {
-        txt += `\n   (${selectedOptionsText.join(', ')})`;
+        txt += `\n(${selectedOptionsText.join(', ')})`;
       }
 
-      if (i.note) txt += `\n   Obs: ${i.note}`;
+      if (i.note) txt += `\n   Obs: ${i.note} `;
       return txt;
     }).join('\n');
 
-    const text = `*Pedido #${order.id}*\n` +
-      `Cliente: ${order.customerName}\n` +
-      `Tel: ${order.whatsapp}\n` +
-      `Tipo: ${order.method}\n` +
-      `Endereço: ${order.address}\n` +
-      `Pagamento: ${order.paymentMethod}\n\n` +
-      `Itens:\n${itemsText}\n\n` +
-      `*Total: ${formatCurrency(order.total)}*`;
+    const text = `* Pedido #${order.id}*\n` +
+      `Cliente: ${order.customerName} \n` +
+      `Tel: ${order.whatsapp} \n` +
+      `Tipo: ${order.method} \n` +
+      `Endereço: ${order.address} \n` +
+      `Pagamento: ${order.paymentMethod} \n\n` +
+      `Itens: \n${itemsText} \n\n` +
+      `* Total: ${formatCurrency(order.total)}* `;
 
     navigator.clipboard.writeText(text).then(() => {
       alert('Pedido copiado para área de transferência!');
@@ -975,7 +951,7 @@ const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     // Check minimum order value
     const subtotal = cart.reduce((acc, item) => acc + (item.totalPrice * item.quantity), 0);
     if (coupon.minOrderValue && subtotal < coupon.minOrderValue) {
-      return { success: false, message: `Valor mínimo para este cupom: ${formatCurrency(coupon.minOrderValue)}` };
+      return { success: false, message: `Valor mínimo para este cupom: ${formatCurrency(coupon.minOrderValue)} ` };
     }
 
     setAppliedCoupon(coupon);
@@ -1042,7 +1018,7 @@ const Sidebar = () => {
       {isSidebarOpen && (
         <div className="fixed inset-0 bg-black/50 z-[60]" onClick={() => setSidebarOpen(false)} />
       )}
-      <div className={`fixed top-0 left-0 h-full w-64 bg-white shadow-2xl z-[70] transform transition-transform duration-300 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <div className={`fixed top-0 left-0 h-full w-64 bg-white shadow-2xl z-[70] transform transition-transform duration-300 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} `}>
         <div
           className="p-4 text-white font-bold text-lg flex justify-between items-center transition-colors duration-300"
           style={{
@@ -1061,15 +1037,16 @@ const Sidebar = () => {
           {categories.map(cat => (
             <button key={cat.id} onClick={() => {
               navigate('/');
-              setTimeout(() => document.getElementById(`cat-${cat.id}`)?.scrollIntoView({ behavior: 'smooth' }), 100);
+              setTimeout(() => document.getElementById(`cat - ${cat.id} `)?.scrollIntoView({ behavior: 'smooth' }), 100);
               setSidebarOpen(false);
             }} className="w-full text-left px-4 py-3 hover:bg-gray-100 text-gray-600 flex items-center gap-2">
               <span>{cat.icon}</span> {cat.title}
             </button>
           ))}
           <div className="border-t border-gray-100 my-2" />
-          <button onClick={() => setShowPassword(true)} className="w-full text-left px-4 py-3 hover:bg-gray-100 text-gray-600 flex items-center justify-center gap-2">
+          <button onClick={() => setShowPassword(true)} className="w-full text-left px-4 py-3 hover:bg-gray-100 text-gray-600 flex items-center gap-2">
             <LockIcon size={24} />
+            <span>Área Administrativa</span>
           </button>
         </div>
       </div>
@@ -1101,15 +1078,26 @@ const Header = () => {
   const { setSidebarOpen } = useApp();
   return (
     <div
-      className="h-16 flex items-center justify-between px-4 shadow-md sticky top-0 z-40 transition-colors duration-300"
-      style={{ backgroundColor: 'var(--color-header-bg, #4E0797)' }}
+      className="h-16 flex items-center justify-between px-4 sticky top-0 z-40 transition-all duration-300 backdrop-blur-glass shadow-sm"
+      style={{
+        background: 'linear-gradient(to right, var(--color-header-bg, #4E0797), #ff8f3c)',
+        borderBottom: '1px solid rgba(255,255,255,0.1)'
+      }}
     >
-      <div className="max-w-sm mx-auto w-full flex items-center justify-between">
-        <button onClick={() => setSidebarOpen(true)} className="text-white p-1">
-          <Menu size={28} style={{ color: 'var(--color-header-text, #ffffff)' }} />
+      <div className="max-w-7xl mx-auto w-full flex items-center justify-between">
+        <button
+          onClick={() => setSidebarOpen(true)}
+          className="p-2 rounded-full hover:bg-white/10 transition-colors active:scale-95"
+        >
+          <Menu size={28} className="text-white drop-shadow-md" />
         </button>
-        <button className="text-white p-1">
-          <Search size={28} style={{ color: 'var(--color-header-text, #ffffff)' }} />
+
+        {/* Optional: Add Logo or Title here if needed for mobile header */}
+
+        <button
+          className="p-2 rounded-full hover:bg-white/10 transition-colors active:scale-95"
+        >
+          <Search size={28} className="text-white drop-shadow-md" />
         </button>
       </div>
     </div>
@@ -1147,23 +1135,28 @@ const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
   return (
     <>
       <div
-        className={`flex-shrink-0 w-[170px] bg-white rounded-xl shadow-md border border-gray-200 mr-3 mb-2 overflow-hidden cursor-pointer pb-2 transition-all duration-300 ease-out hover:shadow-xl hover:scale-[1.02] hover:bg-gray-50 active:scale-[0.98] active:shadow-sm ${!isStoreOpen ? 'opacity-75 grayscale' : ''}`}
+        className={`flex-shrink-0 w-[180px] bg-white rounded-2xl shadow-premium mr-4 mb-4 overflow-hidden cursor-pointer pb-3 transition-all duration-400 ease-out hover:shadow-premium-hover hover:-translate-y-2 hover:bg-white group ${!isStoreOpen ? 'opacity-75 grayscale' : ''} `}
         onClick={handleAdd}
       >
-        <div className="h-[130px] w-full overflow-hidden">
+        <div className="h-[140px] w-full overflow-hidden relative">
           <img
             src={product.image}
             alt={product.name}
-            className="w-full h-full object-cover transition-transform duration-300 ease-out hover:scale-105"
+            className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-110"
             data-img-type="product"
             data-img-id={product.id}
           />
+          {/* Overlay for "Add" indication on hover */}
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300" />
         </div>
-        <div className="p-2.5 flex flex-col h-[125px]">
-          <h3 className="font-bold text-gray-800 text-[13px] leading-tight mb-1.5 line-clamp-2 h-9">{product.name}</h3>
-          <p className="text-[9px] text-gray-500 line-clamp-3 mb-auto">{product.description}</p>
-          <div className="flex items-center justify-between mt-1.5 pt-1.5 border-t border-gray-100">
-            <span className="font-bold text-green-600 text-sm">R$ {product.price.toFixed(2)}</span>
+        <div className="p-3 flex flex-col h-[130px]">
+          <h3 className="font-bold text-gray-800 text-[14px] leading-snug mb-1.5 line-clamp-2 h-10 group-hover:text-orange-600 transition-colors">{product.name}</h3>
+          <p className="text-[10px] text-gray-500 line-clamp-2 mb-auto leading-relaxed">{product.description}</p>
+          <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-100">
+            <span className="font-extrabold text-transparent bg-clip-text bg-gradient-primary text-base">R$ {product.price.toFixed(2)}</span>
+            <div className="w-8 h-8 rounded-full bg-orange-50 flex items-center justify-center text-orange-600 group-hover:bg-gradient-primary group-hover:text-white transition-all duration-300 shadow-sm">
+              <Plus size={18} />
+            </div>
           </div>
         </div>
       </div>
@@ -1374,7 +1367,7 @@ const ProductModal = ({ product, onClose }: { product: Product; onClose: () => v
                     {filteredOptions.map(opt => {
                       const qty = selectedOptions[opt.id] || 0;
                       return (
-                        <div key={opt.id} className={`bg-white p-4 rounded-lg shadow-sm border ${qty > 0 ? 'border-purple-500 ring-1 ring-purple-500' : 'border-gray-200'} transition-all duration-300 ease-out hover:shadow-md hover:scale-[1.01] hover:bg-gray-50 cursor-pointer`}>
+                        <div key={opt.id} className={`bg - white p - 4 rounded - lg shadow - sm border ${qty > 0 ? 'border-purple-500 ring-1 ring-purple-500' : 'border-gray-200'} transition - all duration - 300 ease - out hover: shadow - md hover: scale - [1.01] hover: bg - gray - 50 cursor - pointer`}>
                           <div className="flex justify-between items-start">
                             <div className="flex-1 pr-4">
                               <h4 className="font-bold text-gray-800">{opt.name}</h4>
@@ -1389,7 +1382,7 @@ const ProductModal = ({ product, onClose }: { product: Product; onClose: () => v
                             <div className="flex items-center gap-3 self-center">
                               <button
                                 onClick={() => handleOptionChange(group.id, opt.id, -1, group.max)}
-                                className={`w-8 h-8 rounded flex items-center justify-center transition-all duration-200 ${qty > 0 ? 'text-red-500 hover:bg-red-50 active:scale-90' : 'text-gray-300'}`}
+                                className={`w - 8 h - 8 rounded flex items - center justify - center transition - all duration - 200 ${qty > 0 ? 'text-red-500 hover:bg-red-50 active:scale-90' : 'text-gray-300'} `}
                                 disabled={qty === 0}
                               >
                                 <Minus size={20} />
@@ -1397,7 +1390,7 @@ const ProductModal = ({ product, onClose }: { product: Product; onClose: () => v
                               <span className="font-bold text-lg w-6 text-center">{qty}</span>
                               <button
                                 onClick={() => handleOptionChange(group.id, opt.id, 1, group.max)}
-                                className={`w-8 h-8 rounded flex items-center justify-center transition-all duration-200 ${currentTotal < group.max ? 'text-green-600 hover:bg-green-50 active:scale-90' : 'text-gray-300'}`}
+                                className={`w - 8 h - 8 rounded flex items - center justify - center transition - all duration - 200 ${currentTotal < group.max ? 'text-green-600 hover:bg-green-50 active:scale-90' : 'text-gray-300'} `}
                                 disabled={currentTotal >= group.max}
                               >
                                 <Plus size={20} />
@@ -1443,104 +1436,106 @@ const ProductModal = ({ product, onClose }: { product: Product; onClose: () => v
 // --- Pages ---
 
 const HomePage = () => {
-  const { categories, products, settings, isStoreOpen } = useApp();
+  const { categories, products, settings, isStoreOpen, addToCart } = useApp();
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const status = isStoreOpen ? 'open' : 'closed';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-orange-50/20 animate-fade-in">
-      {/* Cover Image with Overlapping Logo */}
-      <div className="relative">
-        {/* Cover Image - Only show if bannerUrl exists */}
-        {settings.bannerUrl && (
-          <div className="w-full h-48 md:h-64 lg:h-72 overflow-hidden">
-            <img
-              src={settings.bannerUrl}
-              alt="Cover"
-              className="w-full h-full object-cover"
-              data-img-type="banner"
-            />
-          </div>
-        )}
+    <div className="min-h-screen bg-[#ebebeb] pb-20">
 
-        {/* Logo positioned to overlap cover */}
-        <div className={`${settings.bannerUrl ? 'absolute -bottom-16' : 'relative'} left-0 right-0 flex justify-center`}>
-          <div className={`bg-white ${settings.logoShape === 'circle' ? 'rounded-full' : 'rounded-lg'} p-2 shadow-lg`}>
-            <img
-              src={settings.logoUrl}
-              alt="Logo"
-              className={`w-32 h-32 object-cover ${settings.logoShape === 'circle' ? 'rounded-full' : 'rounded-lg'} border border-white`}
-              data-img-type="logo"
-            />
-          </div>
-        </div>
+      {/* Decorative Background Elements */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        {/* Removed heavy blur elements for cleaner ML look, kept subtle if needed */}
       </div>
 
-      {/* Reduced spacer when banner exists */}
-      {settings.bannerUrl && <div className="h-16 bg-white"></div>}
-
-      <div className="px-4 -mt-0">
-        {/* Status Badge */}
-        {/* Category Shortcuts - Modernized */}
-        <div className="flex flex-wrap justify-center gap-3 mb-8 pt-2 px-2">
-          {categories.filter(cat => cat.active !== false).map(cat => (
-            <button
-              key={cat.id}
-              onClick={() => {
-                const element = document.getElementById(`cat-${cat.id}`);
-                if (element) {
-                  element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }
-              }}
-              className="group relative glass hover-lift px-5 py-3 rounded-2xl text-sm font-semibold shadow-md transition-smooth overflow-hidden"
-            >
-              {/* Gradient Overlay on Hover */}
-              <div className="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-10 transition-opacity duration-300" />
-
-              {/* Content */}
-              <div className="relative flex items-center gap-2.5">
-                <span className="text-2xl transform group-hover:scale-110 transition-transform duration-300">{cat.icon}</span>
-                <span className="text-gray-700 group-hover:text-gray-900 font-display">{cat.title}</span>
-              </div>
-
-              {/* Animated Border */}
-              <div className="absolute inset-0 rounded-2xl border-2 border-transparent group-hover:border-orange-400/30 transition-colors duration-300" />
-            </button>
-          ))}
+      <div className="relative z-10">
+        {/* Cover Image / Banner Carousel in future */}
+        <div className="relative mb-8 bg-white shadow-sm">
+          {settings.bannerUrl ? (
+            <div className="w-full h-40 md:h-64 overflow-hidden relative">
+              <img
+                src={settings.bannerUrl}
+                alt="Banner"
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+            </div>
+          ) : (
+            // Placeholder gradient if no banner
+            <div className="w-full h-32 bg-gradient-to-r from-[#ffe600] to-[#fff159]" />
+          )}
         </div>
 
-        {/* Categories - Modernized */}
-        <div className="space-y-8">
-          {categories.filter(cat => cat.active !== false).map(cat => {
-            const catProducts = products.filter(p => p.categoryId === cat.id && p.active !== false);
-            return (
-              <div key={cat.id} id={`cat-${cat.id}`} className="animate-slide-up">
-                {/* Modern Category Header */}
-                <div className="relative mb-4 pl-1">
-                  <h2 className="text-2xl font-display font-bold mb-1 flex items-center gap-3">
-                    <span className="gradient-text">{cat.title}</span>
-                    <span className="text-3xl animate-pulse-slow">{cat.icon}</span>
-                  </h2>
-                  <div className="h-1 w-20 bg-gradient-primary rounded-full" />
+        <div className="px-4 max-w-7xl mx-auto">
+
+          {/* Categories Shortcuts */}
+          <div className="flex overflow-x-auto gap-4 py-4 mb-6 no-scrollbar">
+            {categories.filter(c => c.active !== false).map(cat => (
+              <button
+                key={cat.id}
+                onClick={() => document.getElementById(`cat-${cat.id}`)?.scrollIntoView({ behavior: 'smooth' })}
+                className="flex flex-col items-center gap-2 min-w-[80px] group cursor-pointer"
+              >
+                <div className="w-16 h-16 bg-white rounded-full shadow-sm flex items-center justify-center text-2xl group-hover:shadow-md transition-all border border-gray-100 group-hover:border-blue-500">
+                  {cat.icon}
                 </div>
-                {/* Horizontal scrolling container */}
-                {catProducts.length === 0 ? (
-                  <div className="bg-gray-50 border border-gray-200 rounded-lg py-8 px-4 text-center">
-                    <p className="text-gray-400 text-sm italic">
-                      Nenhum produto disponível no momento
-                    </p>
+                <span className="text-xs text-gray-500 group-hover:text-blue-600 truncate w-full text-center">{cat.title}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Categories & Products */}
+          <div className="space-y-12">
+            {categories.filter(cat => cat.active !== false).map(cat => {
+              const catProducts = products.filter(p => p.categoryId === cat.id && p.active !== false);
+
+              if (catProducts.length === 0) return null;
+
+              return (
+                <div key={cat.id} id={`cat-${cat.id}`} className="scroll-mt-28">
+                  <div className="flex items-center gap-2 mb-4">
+                    <h2 className="text-xl font-normal text-[#333]">{cat.title}</h2>
+                    <span className="h-[1px] flex-1 bg-gray-300"></span>
+                    <a href="#" className="text-sm text-blue-500 hover:underline">Ver todos</a>
                   </div>
-                ) : (
-                  <ProductCarousel products={catProducts} />
-                )}
-              </div>
-            );
-          })}
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                    {catProducts.map(product => (
+                      <MLProductCard
+                        key={product.id}
+                        product={product}
+                        onClick={() => setSelectedProduct(product)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
 
-      {/* Floating Cart Button */}
       <FloatingCartButton />
       <Footer />
+
+      {/* Product Details Modal */}
+      {selectedProduct && (
+        <MLProductDetails
+          isOpen={!!selectedProduct}
+          product={selectedProduct}
+          onClose={() => setSelectedProduct(null)}
+          onAddToCart={(p, qty) => {
+            addToCart({
+              cartId: Date.now().toString(),
+              product: p,
+              quantity: qty,
+              selectedOptions: {},
+              totalPrice: p.price
+            });
+            // Optional: Show toast
+          }}
+        />
+      )}
     </div>
   );
 };
@@ -1568,10 +1563,10 @@ const FloatingCartButton = () => {
   return (
     <button
       onClick={() => navigate('/cart')}
-      className={`fixed bottom-6 right-6 w-16 h-16 bg-brand-red text-white rounded-full shadow-lg flex items-center justify-center z-50 hover:opacity-90 transition-all ${animate ? 'scale-125' : 'scale-100'}`}
+      className={`fixed bottom - 6 right - 6 w - 16 h - 16 bg - gradient - vibrant text - white rounded - full shadow - glow - orange flex items - center justify - center z - 50 transition - all duration - 300 ${animate ? 'scale-125' : 'scale-100 hover:scale-110'} animate - pulse - glow`}
     >
-      <ShoppingCart size={28} />
-      <span className="absolute -top-1 -right-1 w-6 h-6 bg-white text-brand-red font-bold rounded-full flex items-center justify-center text-xs shadow-md border border-gray-100">
+      <ShoppingCart size={28} className="drop-shadow-sm" />
+      <span className="absolute -top-1 -right-1 w-6 h-6 bg-white text-orange-600 font-bold rounded-full flex items-center justify-center text-xs shadow-md border-2 border-orange-100">
         {cartCount}
       </span>
     </button>
@@ -1822,7 +1817,7 @@ const CheckoutPage = () => {
     addOrder(newOrder);
 
     const itemsText = cart.map(i => {
-      let txt = `${i.quantity}x ${i.product.name}`;
+      let txt = `${i.quantity}x ${i.product.name} `;
 
       // Get option names from groups
       const selectedOptionsText: string[] = [];
@@ -1832,7 +1827,7 @@ const CheckoutPage = () => {
           for (const group of groups) {
             const option = group.options.find(opt => opt.id === optionId);
             if (option) {
-              selectedOptionsText.push(`${option.name} ${qty}x`);
+              selectedOptionsText.push(`${option.name} ${qty} x`);
               break;
             }
           }
@@ -1840,14 +1835,14 @@ const CheckoutPage = () => {
       });
 
       if (selectedOptionsText.length > 0) {
-        txt += `\n   (${selectedOptionsText.join(', ')})`;
+        txt += `\n(${selectedOptionsText.join(', ')})`;
       }
 
-      if (i.note) txt += `\n   Obs: ${i.note}`;
+      if (i.note) txt += `\n   Obs: ${i.note} `;
       return txt;
     }).join('\n');
 
-    const msg = `*Novo Pedido*\nCliente: ${customerName}\nTel: ${phone}\nTipo: ${deliveryMethod}\nEndereço: ${address}\nPagamento: ${paymentMethod}\n\nItens:\n${itemsText}${appliedCoupon ? `\n\nCupom: ${appliedCoupon.code} (-${formatCurrency(discount)})` : ''}\n\n*Total: ${formatCurrency(total)}*`;
+    const msg = `* Novo Pedido *\nCliente: ${customerName} \nTel: ${phone} \nTipo: ${deliveryMethod} \nEndereço: ${address} \nPagamento: ${paymentMethod} \n\nItens: \n${itemsText}${appliedCoupon ? `\n\nCupom: ${appliedCoupon.code} (-${formatCurrency(discount)})` : ''} \n\n * Total: ${formatCurrency(total)}* `;
 
     const url = `https://wa.me/${settings.whatsappNumber}?text=${encodeURIComponent(msg)}`;
     window.open(url, '_blank');
@@ -2939,6 +2934,99 @@ const SettingsPage = () => {
           </div>
         </div>
 
+        {/* Product Details Configuration */}
+        <div className="bg-white p-4 rounded-lg shadow-sm">
+          <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
+            <Layout size={20} /> Interface do Produto
+          </h3>
+          <p className="text-xs text-gray-500 mb-4">Personalize os textos da tela de detalhes do produto</p>
+          <div className="space-y-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Texto de Vendas</label>
+              <input
+                className="w-full border p-2 rounded text-sm"
+                placeholder="Ex: Novo | +100 vendidos"
+                value={settings.productDetailSettings?.salesCountText || ''}
+                onChange={e => updateSettings({
+                  productDetailSettings: { ...settings.productDetailSettings, salesCountText: e.target.value }
+                })}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Texto de Frete</label>
+                <input
+                  className="w-full border p-2 rounded text-sm"
+                  placeholder="Ex: Chegará grátis amanhã"
+                  value={settings.productDetailSettings?.shippingText || ''}
+                  onChange={e => updateSettings({
+                    productDetailSettings: { ...settings.productDetailSettings, shippingText: e.target.value }
+                  })}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Timer de Envio</label>
+                <input
+                  className="w-full border p-2 rounded text-sm"
+                  placeholder="Ex: Comprando em 2h..."
+                  value={settings.productDetailSettings?.shippingTimerText || ''}
+                  onChange={e => updateSettings({
+                    productDetailSettings: { ...settings.productDetailSettings, shippingTimerText: e.target.value }
+                  })}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Texto de Estoque</label>
+              <input
+                className="w-full border p-2 rounded text-sm"
+                placeholder="Ex: Estoque disponível"
+                value={settings.productDetailSettings?.stockText || ''}
+                onChange={e => updateSettings({
+                  productDetailSettings: { ...settings.productDetailSettings, stockText: e.target.value }
+                })}
+              />
+            </div>
+
+            <div className="space-y-2 pt-2 border-t">
+              <span className="text-sm font-bold text-gray-700">Selos de Confiança</span>
+              <input
+                className="w-full border p-2 rounded text-sm"
+                placeholder="Selo 1 (Ex: Devolução grátis...)"
+                value={settings.productDetailSettings?.trustBadge1 || ''}
+                onChange={e => updateSettings({
+                  productDetailSettings: { ...settings.productDetailSettings, trustBadge1: e.target.value }
+                })}
+              />
+              <input
+                className="w-full border p-2 rounded text-sm"
+                placeholder="Selo 2 (Ex: Compra Garantida...)"
+                value={settings.productDetailSettings?.trustBadge2 || ''}
+                onChange={e => updateSettings({
+                  productDetailSettings: { ...settings.productDetailSettings, trustBadge2: e.target.value }
+                })}
+              />
+              <input
+                className="w-full border p-2 rounded text-sm"
+                placeholder="Selo 3 (Ex: Mercado Pontos...)"
+                value={settings.productDetailSettings?.trustBadge3 || ''}
+                onChange={e => updateSettings({
+                  productDetailSettings: { ...settings.productDetailSettings, trustBadge3: e.target.value }
+                })}
+              />
+            </div>
+
+            <button
+              onClick={handleSave}
+              className="w-full bg-purple-600 text-white py-2 rounded-lg font-bold hover:bg-purple-700 transition-colors mt-2"
+            >
+              Salvar Textos
+            </button>
+          </div>
+        </div>
+
         {/* Estimates and Hours Configuration */}
         <div className="bg-white p-4 rounded-lg shadow-sm">
           <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
@@ -3600,7 +3688,7 @@ const AppContent = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 md:pb-0">
+    <div className="min-h-screen bg-[#ebebeb] md:pb-0">
       {/* DEBUG BANNER - FORCED VISIBILITY */}
       {/* DEBUG BANNER REMOVED */}
 
@@ -3609,7 +3697,7 @@ const AppContent = () => {
         onClose={() => setShowExitModal(false)}
         onConfirm={handleConfirmExit}
       />
-      {!isAdminRoute && <Header />}
+      {!isAdminRoute && <MLHeader />}
 
       <Routes>
         <Route path="/" element={<HomePage />} />

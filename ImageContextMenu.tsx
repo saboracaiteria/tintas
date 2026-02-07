@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from './supabaseClient';
 import { Upload, X, Loader2, Lock } from 'lucide-react';
-import { useApp } from './App';
+import { useApp } from './src/context/AppContext';
 
 export const ImageContextMenu = () => {
     const { updateSettings, updateProduct, categories } = useApp();

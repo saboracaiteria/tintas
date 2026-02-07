@@ -1,11 +1,118 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+    /* Mercado Livre Colors */
+    --color-ml-yellow: #fff159;
+    --color-ml-blue: #3483fa;
+    --color-ml-blue-dark: #2968c8;
+    --color-ml-bg: #ebebeb;
+    --color-ml-white: #ffffff;
+    --color-ml-text: #333333;
+    --color-ml-text-light: #666666;
+    --color-ml-green: #00a650;
+
+    /* Fonts - Clean sans-serif like Proxima Nova/Arial */
+    --font-display: "Arial", "Helvetica", sans-serif;
+    --font-sans: "Arial", "Helvetica", sans-serif;
+
+    /* Animations */
+    --animate-fade-in: fadeIn 0.3s ease-out;
+    --animate-slide-up: slideUp 0.4s ease-out;
+    --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    --animate-scale-in: scaleIn 0.3s ease-out;
+    --animate-float: float 6s ease-in-out infinite;
+    --animate-pulse-glow: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    --animate-shimmer: shimmer 2s infinite linear;
+
+    @keyframes fadeIn {
+        0% {
+            opacity: 0;
+        }
+
+        100% {
+            opacity: 1;
+        }
+    }
+
+    @keyframes slideUp {
+        0% {
+            transform: translateY(20px);
+            opacity: 0;
+        }
+
+        100% {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    @keyframes scaleIn {
+        0% {
+            transform: scale(0.95);
+            opacity: 0;
+        }
+
+        100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
+    @keyframes shimmer {
+        0% {
+            background-position: -1000px 0;
+        }
+
+        100% {
+            background-position: 1000px 0;
+        }
+    }
+
+    @keyframes float {
+        0% {
+            transform: translateY(0px);
+        }
+
+        50% {
+            transform: translateY(-10px);
+        }
+
+        100% {
+            transform: translateY(0px);
+        }
+    }
+
+    @keyframes pulse-glow {
+
+        0%,
+        100% {
+            opacity: 1;
+            box-shadow: 0 0 20px rgba(255, 107, 0, 0.4);
+        }
+
+        50% {
+            opacity: .8;
+            box-shadow: 0 0 30px rgba(255, 107, 0, 0.7);
+        }
+    }
+
+    @keyframes gradient-xy {
+        0% {
+            background-position: 0% 50%;
+        }
+
+        50% {
+            background-position: 100% 50%;
+        }
+
+        100% {
+            background-position: 0% 50%;
+        }
+    }
+}
 
 /* Custom Utility Classes */
 @layer utilities {
-
-    /* Animated Gradients */
     .bg-gradient-primary {
         background: linear-gradient(135deg, #ff6b00 0%, #ff8f3c 100%);
     }
@@ -14,90 +121,119 @@
         background: linear-gradient(135deg, #0056b3 0%, #0074e4 100%);
     }
 
-    .bg-gradient-warm {
-        background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+    .bg-gradient-vibrant {
+        background: linear-gradient(135deg, #FF6B00 0%, #FF3D00 50%, #FF9100 100%);
+        background-size: 200% 200%;
+        animation: gradient-xy 6s ease infinite;
     }
 
-    .bg-gradient-cool {
-        background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-    }
-
-    /* Custom Shadows */
     .shadow-glow-orange {
-        box-shadow: 0 0 20px rgba(255, 107, 0, 0.3);
+        box-shadow: 0 0 20px rgba(255, 107, 0, 0.4), 0 10px 40px rgba(255, 107, 0, 0.2);
     }
 
     .shadow-glow-blue {
-        box-shadow: 0 0 20px rgba(0, 86, 179, 0.3);
+        box-shadow: 0 0 20px rgba(0, 86, 179, 0.4), 0 10px 40px rgba(0, 86, 179, 0.2);
     }
 
-    /* Smooth Transitions */
+    .shadow-premium {
+        box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.15), 0 4px 12px -4px rgba(0, 0, 0, 0.1);
+    }
+
+    .shadow-premium-hover {
+        box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.25), 0 8px 16px -6px rgba(0, 0, 0, 0.15);
+    }
+
     .transition-smooth {
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
     }
 
-    .transition-bounce {
-        transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-    }
-
-    /* Backdrop Blur */
     .backdrop-blur-glass {
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        background: rgba(255, 255, 255, 0.7);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+    }
+
+    .glass-panel {
+        background: rgba(255, 255, 255, 0.65);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+    }
+
+    .animate-shimmer {
+        background: linear-gradient(to right,
+                rgba(255, 255, 255, 0) 0%,
+                rgba(255, 255, 255, 0.5) 50%,
+                rgba(255, 255, 255, 0) 100%);
+        background-size: 1000px 100%;
     }
 }
 
+/* Component Classes */
 @layer components {
 
-    /* Modern Card */
-    .card-modern {
-        @apply bg-white rounded-2xl shadow-md hover:shadow-xl transition-smooth;
-        @apply border border-gray-100;
+    /* Combined selector to avoid @apply issues with custom classes */
+    .card-modern,
+    .product-card {
+        @apply bg-white rounded-2xl border border-gray-100/50;
+        box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.15), 0 4px 12px -4px rgba(0, 0, 0, 0.1);
+        transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
     }
 
-    /* Animated Button */
+    .card-modern:hover,
+    .product-card:hover {
+        box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.25), 0 8px 16px -6px rgba(0, 0, 0, 0.15);
+        transform: translateY(-4px);
+    }
+
+    .product-card {
+        @apply overflow-hidden;
+    }
+
     .btn-primary {
-        @apply bg-gradient-primary text-white font-semibold px-6 py-3 rounded-xl;
-        @apply shadow-md hover:shadow-xl transition-smooth;
-        @apply hover:scale-105 active:scale-95;
+        @apply text-white font-semibold px-6 py-3 rounded-xl shadow-lg hover:scale-[1.02] active:scale-[0.98];
+        background: linear-gradient(135deg, #ff6b00 0%, #ff8f3c 100%);
+        transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+
+    .btn-primary:hover {
+        box-shadow: 0 0 20px rgba(255, 107, 0, 0.4), 0 10px 40px rgba(255, 107, 0, 0.2);
     }
 
     .btn-secondary {
-        @apply bg-gradient-secondary text-white font-semibold px-6 py-3 rounded-xl;
-        @apply shadow-md hover:shadow-xl transition-smooth;
-        @apply hover:scale-105 active:scale-95;
+        @apply text-white font-semibold px-6 py-3 rounded-xl shadow-lg hover:scale-[1.02] active:scale-[0.98];
+        background: linear-gradient(135deg, #0056b3 0%, #0074e4 100%);
+        transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
     }
 
-    /* Category Card */
+    .btn-secondary:hover {
+        box-shadow: 0 0 20px rgba(0, 86, 179, 0.4), 0 10px 40px rgba(0, 86, 179, 0.2);
+    }
+
+    .btn-vibrant {
+        @apply text-white font-bold px-6 py-3 rounded-xl shadow-lg hover:scale-[1.05] active:scale-[0.95];
+        background: linear-gradient(135deg, #FF6B00 0%, #FF3D00 50%, #FF9100 100%);
+        background-size: 200% 200%;
+        animation: gradient-xy 6s ease infinite;
+        transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+
+    .btn-vibrant:hover {
+        box-shadow: 0 0 20px rgba(255, 107, 0, 0.4), 0 10px 40px rgba(255, 107, 0, 0.2);
+    }
+
     .category-card {
-        @apply relative overflow-hidden rounded-2xl;
-        @apply transform transition-smooth hover:scale-105;
-        @apply shadow-md hover:shadow-xl;
+        @apply relative overflow-hidden rounded-2xl transform shadow-md hover:shadow-xl hover:bg-white/80;
+        background: rgba(255, 255, 255, 0.65);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
     }
 
-    /* Product Card */
-    .product-card {
-        @apply card-modern overflow-hidden;
-        @apply transform hover:-translate-y-2;
+    .category-card:hover {
+        transform: translateY(-4px) scale(1.03);
     }
-}
-
-/* Animation Keyframes */
-@keyframes shimmer {
-    0% {
-        background-position: -1000px 0;
-    }
-
-    100% {
-        background-position: 1000px 0;
-    }
-}
-
-.animate-shimmer {
-    animation: shimmer 2s infinite linear;
-    background: linear-gradient(to right,
-            transparent 0%,
-            rgba(255, 255, 255, 0.3) 50%,
-            transparent 100%);
-    background-size: 1000px 100%;
 }

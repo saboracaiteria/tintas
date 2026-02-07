@@ -21,11 +21,21 @@ export interface Product {
   name: string;
   description?: string;
   price: number;
+  promoPrice?: number; // Optional promotional price
   image: string;
+  variations?: any[]; // For future use
   categoryId: string;
   groupIds?: string[]; // IDs of ProductGroups attached to this product
   displayOrder?: number; // Order for sorting products within category
   active?: boolean; // Toggle for emergency deactivation
+  // Product Details Customization
+  salesCountText?: string;
+  shippingText?: string;
+  shippingTimerText?: string;
+  stockText?: string;
+  trustBadge1?: string;
+  trustBadge2?: string;
+  trustBadge3?: string;
 }
 
 export interface Category {
@@ -155,6 +165,15 @@ export interface GlobalSettings {
   instagramUrl?: string;
   businessAddress?: string;
   copyrightText?: string;
+  productDetailSettings?: {
+    salesCountText?: string;
+    shippingText?: string;
+    shippingTimerText?: string;
+    stockText?: string;
+    trustBadge1?: string;
+    trustBadge2?: string;
+    trustBadge3?: string;
+  };
 }
 
 export interface VisitorStat {

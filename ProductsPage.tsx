@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Plus, Edit, Trash2, Upload, Loader2, Save, X, GripVertical, ToggleLeft, ToggleRight } from 'lucide-react';
+import { ChevronLeft, Plus, Edit, Trash2, Upload, Loader2, Save, X, GripVertical, ToggleLeft, ToggleRight, Layout } from 'lucide-react';
 import { supabase } from './supabaseClient';
 import { ConfirmModal } from './ConfirmModal';
 
@@ -489,6 +489,61 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({
                             </div>
                         )}
 
+                        {/* Product Interface Details */}
+                        <div className="border border-gray-200 rounded p-3 bg-gray-50">
+                            <h4 className="font-bold text-sm text-gray-700 mb-2 flex items-center gap-2">
+                                <Layout size={16} /> Detalhes da Interface (Opcional)
+                            </h4>
+                            <div className="space-y-2">
+                                <input
+                                    className="w-full border p-2 rounded text-sm"
+                                    placeholder="Texto de Vendas (Ex: Novo | +100 vendidos)"
+                                    value={editingProduct.salesCountText || ''}
+                                    onChange={e => setEditingProduct({ ...editingProduct, salesCountText: e.target.value })}
+                                />
+                                <div className="grid grid-cols-2 gap-2">
+                                    <input
+                                        className="w-full border p-2 rounded text-sm"
+                                        placeholder="Texto Frete"
+                                        value={editingProduct.shippingText || ''}
+                                        onChange={e => setEditingProduct({ ...editingProduct, shippingText: e.target.value })}
+                                    />
+                                    <input
+                                        className="w-full border p-2 rounded text-sm"
+                                        placeholder="Timer Envio"
+                                        value={editingProduct.shippingTimerText || ''}
+                                        onChange={e => setEditingProduct({ ...editingProduct, shippingTimerText: e.target.value })}
+                                    />
+                                </div>
+                                <input
+                                    className="w-full border p-2 rounded text-sm"
+                                    placeholder="Texto Estoque (Ex: Estoque disponível)"
+                                    value={editingProduct.stockText || ''}
+                                    onChange={e => setEditingProduct({ ...editingProduct, stockText: e.target.value })}
+                                />
+                                <div className="space-y-1">
+                                    <input
+                                        className="w-full border p-2 rounded text-sm"
+                                        placeholder="Selo 1 (Ex: Devolução grátis...)"
+                                        value={editingProduct.trustBadge1 || ''}
+                                        onChange={e => setEditingProduct({ ...editingProduct, trustBadge1: e.target.value })}
+                                    />
+                                    <input
+                                        className="w-full border p-2 rounded text-sm"
+                                        placeholder="Selo 2 (Ex: Compra Garantida...)"
+                                        value={editingProduct.trustBadge2 || ''}
+                                        onChange={e => setEditingProduct({ ...editingProduct, trustBadge2: e.target.value })}
+                                    />
+                                    <input
+                                        className="w-full border p-2 rounded text-sm"
+                                        placeholder="Selo 3 (Ex: Mercado Pontos...)"
+                                        value={editingProduct.trustBadge3 || ''}
+                                        onChange={e => setEditingProduct({ ...editingProduct, trustBadge3: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
                         <button
                             onClick={handleSave}
                             disabled={isUploading}
@@ -504,7 +559,8 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({
                         </button>
                     </div>
                 </div>
-            )}
+            )
+            }
 
             <ConfirmModal
                 isOpen={!!deleteConfirmation}
@@ -534,6 +590,6 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({
                 isDestructive={true}
                 confirmText="Desativar"
             />
-        </div>
+        </div >
     );
 };
