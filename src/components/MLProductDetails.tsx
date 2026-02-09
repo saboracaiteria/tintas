@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Heart, Share2, Award, ShieldCheck, Truck } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { supabase } from '../../supabaseClient';
 
 // Helper to format currency
 const formatCurrency = (value: number) => {
@@ -22,13 +23,101 @@ interface MLProductDetailsProps {
 export const MLProductDetails: React.FC<MLProductDetailsProps> = ({ product, isOpen, onClose, onAddToCart }) => {
     if (!isOpen) return null;
 
-    const [selectedVariation, setSelectedVariation] = useState<string | null>(null);
+
+    const [selectedOptions, setSelectedOptions] = useState<Record<string, any>>({});
+    const [productGroups, setProductGroups] = useState<any[]>([]);
     const [quantity, setQuantity] = useState(1);
+    const [loadingOptions, setLoadingOptions] = useState(false);
     const { settings } = useApp();
 
+    // Fetch options when product opens
+    React.useEffect(() => {
+        if (isOpen && product) {
+            fetchOptions();
+            setSelectedOptions({});
+        }
+    }, [isOpen, product]);
+
+    const fetchOptions = async () => {
+        setLoadingOptions(true);
+        try {
+            const { data, error } = await supabase
+                .from('product_group_relations')
+                .select(`
+                    group_id,
+                    product_groups (
+                        id,
+                        title,
+                        min,
+                        max,
+                        options: product_options (
+                            id,
+                            name,
+                            price,
+                            description
+                        )
+                    )
+                `)
+                .eq('product_id', product.id);
+
+            if (error) throw error;
+
+            if (data) {
+                // Format and sort groups
+                const groups = data.map((item: any) => item.product_groups);
+                // Pre-select defaults?
+                const initialSelections: Record<string, any> = {};
+
+                groups.forEach((g: any) => {
+                    // Sort options by price?
+                    g.options.sort((a: any, b: any) => (a.price || 0) - (b.price || 0));
+
+                    // Auto-select first if required (min >= 1)
+                    if (g.min >= 1 && g.options.length > 0) {
+                        initialSelections[g.id] = g.options[0];
+                    }
+                });
+
+                setProductGroups(groups);
+                setSelectedOptions(initialSelections);
+            }
+        } catch (err) {
+            console.error('Error fetching options:', err);
+        } finally {
+            setLoadingOptions(false);
+        }
+    };
+
+    const handleOptionSelect = (group: any, option: any) => {
+        setSelectedOptions(prev => ({
+            ...prev,
+            [group.id]: option
+        }));
+    };
+
+    const calculateTotal = () => {
+        let total = product.price;
+        // Add options prices
+        Object.values(selectedOptions).forEach((opt: any) => {
+            if (opt?.price) total += Number(opt.price);
+        });
+
+        // Handle promo logic if base price changes? 
+        // For simplicity, let's assume promo only applies to base, but options are extra.
+        // Or if promo exists, we use promo as base.
+        const base = (product.promoPrice && product.promoPrice < product.price) ? product.promoPrice : product.price;
+
+        let final = base;
+        Object.values(selectedOptions).forEach((opt: any) => {
+            if (opt?.price) final += Number(opt.price);
+        });
+
+        return final;
+    };
+
+    const currentPrice = calculateTotal();
     const hasPromo = product.promoPrice && product.promoPrice < product.price;
-    const currentPrice = hasPromo ? product.promoPrice : product.price;
-    const installmentValue = (currentPrice! / 10).toFixed(2).replace('.', ',');
+    const installmentValue = (currentPrice / 10).toFixed(2).replace('.', ',');
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-0 md:p-4 animate-fade-in">
@@ -95,11 +184,11 @@ export const MLProductDetails: React.FC<MLProductDetailsProps> = ({ product, isO
                                 <div className="mb-4">
                                     {hasPromo && <span className="text-gray-400 line-through text-sm">{formatCurrency(product.price)}</span>}
                                     <div className="flex items-center gap-2">
-                                        <span className="text-3xl font-light text-[#333]">{formatCurrency(currentPrice!)}</span>
+                                        <span className="text-3xl font-light text-[#333]">{formatCurrency(currentPrice)}</span>
                                         {hasPromo && <span className="text-green-500 font-medium text-lg">{Math.round(((product.price - product.promoPrice!) / product.price) * 100)}% OFF</span>}
                                     </div>
                                     <div className="text-green-600 text-sm md:text-base font-medium">
-                                        em 10x {formatCurrency(currentPrice! / 10)} sem juros
+                                        em 10x {formatCurrency(currentPrice / 10)} sem juros
                                     </div>
                                     <a href="#" className="text-blue-500 text-xs font-semibold mt-1 block">Ver os meios de pagamento</a>
                                 </div>
@@ -114,18 +203,36 @@ export const MLProductDetails: React.FC<MLProductDetailsProps> = ({ product, isO
                                     </div>
                                 </div>
 
-                                {/* Variations (Color/Size) - Simulated */}
-                                <div className="mb-6">
-                                    <label className="text-sm font-bold text-[#333] block mb-2">Cor: <span className="font-normal">Padrão</span></label>
-                                    <div className="flex gap-2">
-                                        <button className="w-10 h-10 rounded border-2 border-blue-600 p-0.5">
-                                            <img src={product.image || 'https://via.placeholder.com/50'} className="w-full h-full object-cover" />
-                                        </button>
-                                        <button className="w-10 h-10 rounded border border-gray-200 p-0.5 opacity-50">
-                                            <div className="w-full h-full bg-black"></div>
-                                        </button>
+                                {/* Product Options (Dynamic) */}
+                                {productGroups.map(group => (
+                                    <div key={group.id} className="mb-6">
+                                        <label className="text-sm font-bold text-[#333] block mb-2">
+                                            {group.title}: <span className="font-normal">{selectedOptions[group.id]?.name || 'Selecione'}</span>
+                                        </label>
+                                        <div className="flex flex-wrap gap-2">
+                                            {group.options.map((option: any) => {
+                                                const isSelected = selectedOptions[group.id]?.id === option.id;
+                                                return (
+                                                    <button
+                                                        key={option.id}
+                                                        onClick={() => handleOptionSelect(group, option)}
+                                                        className={`
+                                                            px-3 py-2 rounded border text-sm transition-all
+                                                            ${isSelected
+                                                                ? 'border-blue-500 bg-blue-50 text-blue-700 font-medium'
+                                                                : 'border-gray-200 text-gray-700 hover:border-gray-300'
+                                                            }
+                                                        `}
+                                                    >
+                                                        {option.name}
+                                                        {option.price > 0 && ` (+${formatCurrency(option.price)})`}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
                                     </div>
-                                </div>
+                                ))}
+
 
                                 {/* Stock */}
                                 <div className="mb-6 font-medium text-sm text-[#333]">
@@ -139,7 +246,15 @@ export const MLProductDetails: React.FC<MLProductDetailsProps> = ({ product, isO
                                     </button>
                                     <button
                                         onClick={() => {
-                                            onAddToCart(product, quantity);
+                                            const optionsList = Object.values(selectedOptions);
+                                            // Check required
+                                            const missing = productGroups.filter(g => g.min > 0 && !selectedOptions[g.id]);
+                                            if (missing.length > 0) {
+                                                alert(`Por favor, selecione: ${missing.map(g => g.title).join(', ')}`);
+                                                return;
+                                            }
+
+                                            onAddToCart(product, quantity, optionsList); // We might need to adjust onAddToCart signature or pass variation differently
                                             onClose();
                                         }}
                                         className="w-full bg-[#3483fa]/15 text-[#3483fa] hover:bg-[#3483fa]/20 font-semibold py-3.5 rounded-md transition-colors text-base"

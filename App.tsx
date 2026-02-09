@@ -401,10 +401,17 @@ const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
 
   const fetchProducts = async () => {
-    const { data } = await supabase.from('products').select(`
-  *,
-  product_group_relations(group_id)
+    // Fix query: select product_group_relations correctly
+    const { data, error } = await supabase.from('products').select(`
+      *,
+      product_group_relations (
+         group_id
+      )
     `).order('display_order', { ascending: true });
+
+    if (error) {
+      console.error("ERRO BUSCANDO PRODUTOS:", error);
+    }
 
     if (data) {
       // Mapear para o formato interno (adicionar groupIds e displayOrder)
@@ -563,8 +570,39 @@ const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   // --- Funções de Mutação (CRUD) ---
 
-  const addToCart = (item: CartItem) => {
-    setCart(prev => [...prev, item]);
+  /* 
+   * ADD TO CART
+   */
+  const addToCart = (product: Product, quantity = 1, variation?: any[]) => {
+    setCart(prev => {
+      // Simple internal ID for cart item
+      const cartId = Date.now().toString() + Math.random().toString().slice(2, 5);
+
+      // Check if item exists with same options
+      const existingIndex = prev.findIndex(item => {
+        if (item.id !== product.id) return false;
+        // Compare variations
+        const v1 = JSON.stringify(item.variation || []);
+        const v2 = JSON.stringify(variation || []);
+        return v1 === v2;
+      });
+
+      if (existingIndex >= 0) {
+        // Update quantity
+        const newCart = [...prev];
+        newCart[existingIndex].quantity += quantity;
+        return newCart;
+      }
+
+      // Add new
+      return [...prev, {
+        ...product,
+        cartId, // Specific ID for this cart entry
+        quantity,
+        variation
+      }];
+    });
+    setIsCartOpen(true);
   };
 
   const removeFromCart = (cartId: string) => {

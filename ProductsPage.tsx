@@ -77,22 +77,31 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({
             const fileName = `${Date.now()}.${fileExt}`;
             const filePath = `${fileName}`;
 
-            const { error: uploadError } = await supabase.storage
+            console.log('Iniciando upload para:', filePath);
+
+            const { data: uploadData, error: uploadError } = await supabase.storage
                 .from('product-images')
-                .upload(filePath, file);
+                .upload(filePath, file, {
+                    cacheControl: '3600',
+                    upsert: false
+                });
 
             if (uploadError) {
+                console.error('Erro detalhado do Supabase:', uploadError);
                 throw uploadError;
             }
+
+            console.log('Upload concluído:', uploadData);
 
             const { data } = supabase.storage
                 .from('product-images')
                 .getPublicUrl(filePath);
 
+            console.log('URL Pública gerada:', data.publicUrl);
             return data.publicUrl;
-        } catch (error) {
+        } catch (error: any) {
             console.error('Erro ao fazer upload da imagem:', error);
-            alert('Erro ao fazer upload da imagem. Tente novamente.');
+            alert(`Erro ao fazer upload: ${error.message || 'Erro desconhecido'}`);
             return null;
         } finally {
             setIsUploading(false);
