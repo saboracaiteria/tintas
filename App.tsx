@@ -16,6 +16,8 @@ import { createSupabaseClient } from './lib/supabase';
 import { MLHeader } from './src/components/MLHeader';
 import { MLProductCard } from './src/components/MLProductCard';
 import { MLProductDetails } from './src/components/MLProductDetails';
+import { HeroSection } from './src/components/HeroSection';
+
 import {
   CATEGORIES, PRODUCTS, GROUPS, WHATSAPP_NUMBER, LOGO_URL,
   PAYMENT_METHODS, INITIAL_COUPONS, MOCK_ORDERS
@@ -1490,36 +1492,32 @@ const HomePage = () => {
 
       <div className="relative z-10">
         {/* Cover Image / Banner Carousel in future */}
-        <div className="relative mb-8 bg-white shadow-sm">
-          {settings.bannerUrl ? (
-            <div className="w-full h-40 md:h-64 overflow-hidden relative">
-              <img
-                src={settings.bannerUrl}
-                alt="Banner"
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
-            </div>
-          ) : (
-            // Placeholder gradient if no banner
-            <div className="w-full h-32 bg-gradient-to-r from-[#ffe600] to-[#fff159]" />
-          )}
-        </div>
+        {/* Cover Image / Banner Carousel in future */}
+        <HeroSection onCtaClick={() => {
+          // Scroll to first category or promotions
+          const firstCat = categories.find(c => c.active !== false);
+          if (firstCat) {
+            document.getElementById(`cat-${firstCat.id}`)?.scrollIntoView({ behavior: 'smooth' });
+          }
+        }} />
+
 
         <div className="px-4 max-w-7xl mx-auto">
 
           {/* Categories Shortcuts */}
-          <div className="flex overflow-x-auto gap-4 py-4 mb-6 no-scrollbar">
+          <div className="flex overflow-x-auto gap-4 py-6 mb-6 no-scrollbar px-2">
             {categories.filter(c => c.active !== false).map(cat => (
               <button
                 key={cat.id}
                 onClick={() => document.getElementById(`cat-${cat.id}`)?.scrollIntoView({ behavior: 'smooth' })}
-                className="flex flex-col items-center gap-2 min-w-[80px] group cursor-pointer"
+                className="flex flex-col items-center gap-3 min-w-[90px] group cursor-pointer transition-all duration-300 hover:-translate-y-1"
               >
-                <div className="w-16 h-16 bg-white rounded-full shadow-sm flex items-center justify-center text-2xl group-hover:shadow-md transition-all border border-gray-100 group-hover:border-blue-500">
+                <div className="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center text-3xl group-hover:shadow-lg group-hover:shadow-purple-500/20 group-hover:scale-105 transition-all border border-gray-100 group-hover:border-purple-200">
                   {cat.icon}
                 </div>
-                <span className="text-xs text-gray-500 group-hover:text-blue-600 truncate w-full text-center">{cat.title}</span>
+                <span className="text-xs font-medium text-gray-600 group-hover:text-purple-700 truncate w-full text-center transition-colors">
+                  {cat.title}
+                </span>
               </button>
             ))}
           </div>
