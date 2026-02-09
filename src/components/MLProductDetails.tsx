@@ -110,7 +110,7 @@ export const MLProductDetails: React.FC<MLProductDetailsProps> = ({ product, isO
                                     <div>
                                         <p className="text-green-600 font-medium text-sm">{product.shippingText || settings.productDetailSettings?.shippingText || 'Chegará grátis amanhã'}</p>
                                         <p className="text-gray-400 text-xs">{product.shippingTimerText || settings.productDetailSettings?.shippingTimerText || 'Comprando dentro das próximas 2 h 30 min'}</p>
-                                        <a href="#" className="text-blue-500 text-xs font-semibold">Mais formas de entrega</a>
+                                        <a href="#" className="text-blue-500 text-xs font-semibold">para a entrega ou retirar</a>
                                     </div>
                                 </div>
 
@@ -148,21 +148,6 @@ export const MLProductDetails: React.FC<MLProductDetailsProps> = ({ product, isO
                                     </button>
                                 </div>
 
-                                {/* Trust Badges */}
-                                <div className="mt-6 flex flex-col gap-3">
-                                    <div className="flex gap-3 items-start">
-                                        <Share2 className="text-gray-400" size={16} />
-                                        <p className="text-xs text-gray-500"><span className="text-blue-500">Devolução grátis.</span> {product.trustBadge1 || settings.productDetailSettings?.trustBadge1 || 'Você tem 30 dias a partir da data de recebimento.'}</p>
-                                    </div>
-                                    <div className="flex gap-3 items-start">
-                                        <ShieldCheck className="text-gray-400" size={16} />
-                                        <p className="text-xs text-gray-500"><span className="text-blue-500">Compra Garantida</span>, {product.trustBadge2 || settings.productDetailSettings?.trustBadge2 || 'receba o produto que está esperando ou devolvemos o dinheiro.'}</p>
-                                    </div>
-                                    <div className="flex gap-3 items-start">
-                                        <Award className="text-gray-400" size={16} />
-                                        <p className="text-xs text-gray-500"><span className="text-blue-500">Mercado Pontos.</span> {product.trustBadge3 || settings.productDetailSettings?.trustBadge3 || 'Você acumula pontos a cada compra.'}</p>
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     </div>

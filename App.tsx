@@ -163,6 +163,7 @@ const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [adminRole, setAdminRole, roleLoaded] = usePersistedState<Role>('adminRole', null);
   const [appliedCoupon, setAppliedCoupon, couponLoaded] = usePersistedState<Coupon | null>('appliedCoupon', null);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const isStorageLoaded = cartLoaded && roleLoaded && couponLoaded;
 
@@ -977,6 +978,7 @@ const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       checkStoreStatus: () => isStoreOpen ? 'open' : 'closed',
       isStoreOpen,
       setSidebarOpen,
+      searchTerm, setSearchTerm,
       appliedCoupon, applyCoupon, removeCoupon,
       loading
     }}>
@@ -1436,7 +1438,7 @@ const ProductModal = ({ product, onClose }: { product: Product; onClose: () => v
 // --- Pages ---
 
 const HomePage = () => {
-  const { categories, products, settings, isStoreOpen, addToCart } = useApp();
+  const { categories, products, settings, isStoreOpen, addToCart, searchTerm } = useApp();
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const status = isStoreOpen ? 'open' : 'closed';
 
@@ -1487,7 +1489,11 @@ const HomePage = () => {
           {/* Categories & Products */}
           <div className="space-y-12">
             {categories.filter(cat => cat.active !== false).map(cat => {
-              const catProducts = products.filter(p => p.categoryId === cat.id && p.active !== false);
+              const catProducts = products.filter(p =>
+                p.categoryId === cat.id &&
+                p.active !== false &&
+                (searchTerm === '' || p.name.toLowerCase().includes(searchTerm.toLowerCase()))
+              );
 
               if (catProducts.length === 0) return null;
 

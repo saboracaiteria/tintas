@@ -50,6 +50,8 @@ export interface AppContextType {
     isStoreOpen: boolean;
     isSidebarOpen: boolean;
     setSidebarOpen: (open: boolean) => void;
+    searchTerm: string;
+    setSearchTerm: (term: string) => void;
     loading: boolean;
 }
 

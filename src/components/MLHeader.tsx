@@ -4,10 +4,9 @@ import { useApp } from '../context/AppContext';
 import { useNavigate } from 'react-router-dom';
 
 export const MLHeader = () => {
-    const { setSidebarOpen, cart, settings } = useApp();
+    const { setSidebarOpen, cart, settings, searchTerm, setSearchTerm } = useApp();
     const navigate = useNavigate();
     const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
-    const [searchTerm, setSearchTerm] = useState('');
 
     return (
         <header className="bg-[#fff159] pb-2">
@@ -15,12 +14,13 @@ export const MLHeader = () => {
                 {/* Top Row: Logo, Search, Menu */}
                 <div className="flex items-center gap-3 mb-2">
                     {/* Logo (Simulated or Real) */}
-                    <div className="flex-shrink-0" onClick={() => navigate('/')}>
-                        {settings.logoUrl ? (
+                    <div className="flex items-center gap-2" onClick={() => navigate('/')}>
+                        {settings.logoUrl && (
                             <img src={settings.logoUrl} alt="Logo" className="h-8 w-auto object-contain cursor-pointer" />
-                        ) : (
-                            <span className="font-bold text-[#2d3277] text-xl cursor-pointer">CdC</span>
                         )}
+                        <span className={`font-bold text-[#2d3277] text-lg leading-tight cursor-pointer whitespace-nowrap overflow-hidden text-ellipsis max-w-[120px] sm:max-w-none ${settings.logoUrl ? 'hidden sm:block' : ''}`}>
+                            {settings.storeName || "Casa das Cores"}
+                        </span>
                     </div>
 
                     {/* Search Bar - Flex Grow */}
