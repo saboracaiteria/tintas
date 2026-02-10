@@ -324,6 +324,13 @@ const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   useEffect(() => {
     const init = async () => {
       console.log('[DEBUG] init() started');
+
+      // Safety timeout for data loading
+      const loadingTimeout = setTimeout(() => {
+        console.warn('[DEBUG] Data loading timed out - forcing app to open');
+        setLoading(false);
+      }, 5000); // 5 seconds max load time
+
       try {
         console.log('[DEBUG] Calling fetchData()...');
         await fetchData();
@@ -331,6 +338,7 @@ const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       } catch (error) {
         console.error('[DEBUG] Erro fatal ao carregar dados:', error);
       } finally {
+        clearTimeout(loadingTimeout);
         setLoading(false);
         console.log('[DEBUG] App loaded (finally block executed)', new Date().toISOString());
       }
@@ -418,14 +426,18 @@ const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     try {
       if (isConfigured) {
         // Online Mode: Fetch from Supabase
+        console.log('[DEBUG] Starting parallel fetches...');
+
         await Promise.all([
-          fetchProducts().catch(e => console.error('Erro products:', e)),
-          fetchCategories().catch(e => console.error('Erro categories:', e)),
-          fetchGroups().catch(e => console.error('Erro groups:', e)),
-          fetchCoupons().catch(e => console.error('Erro coupons:', e)),
-          fetchOrders().catch(e => console.error('Erro orders:', e)),
-          fetchSettings().catch(e => console.error('Erro settings:', e))
+          fetchProducts().then(() => console.log('[DEBUG] Products loaded')).catch(e => console.error('Erro products:', e)),
+          fetchCategories().then(() => console.log('[DEBUG] Categories loaded')).catch(e => console.error('Erro categories:', e)),
+          fetchGroups().then(() => console.log('[DEBUG] Groups loaded')).catch(e => console.error('Erro groups:', e)),
+          fetchCoupons().then(() => console.log('[DEBUG] Coupons loaded')).catch(e => console.error('Erro coupons:', e)),
+          fetchOrders().then(() => console.log('[DEBUG] Orders loaded')).catch(e => console.error('Erro orders:', e)),
+          fetchSettings().then(() => console.log('[DEBUG] Settings loaded')).catch(e => console.error('Erro settings:', e))
         ]);
+
+        console.log('[DEBUG] All fetches finished');
       } else {
         // Offline Mode: Load mock data (Casa das Cores)
         console.warn("⚠️ MODO OFFLINE: Carregando dados mock da Casa das Cores...");
