@@ -422,19 +422,35 @@ const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   // --- Funções de Fetch ---
 
+  const fetchWithTimeout = async (promise: Promise<any>, name: string, ms = 4000) => {
+    const timeout = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error(`Timeout fetching ${name}`)), ms)
+    );
+    return Promise.race([promise, timeout]);
+  };
+
   const fetchData = async () => {
     try {
       if (isConfigured) {
         // Online Mode: Fetch from Supabase
         console.log('[DEBUG] Starting parallel fetches...');
 
+        const safeFetch = async (fn: () => Promise<any>, name: string) => {
+          try {
+            await fetchWithTimeout(fn(), name);
+            console.log(`[DEBUG] ${name} loaded`);
+          } catch (error) {
+            console.error(`[DEBUG] Error loading ${name}:`, error);
+          }
+        };
+
         await Promise.all([
-          fetchProducts().then(() => console.log('[DEBUG] Products loaded')).catch(e => console.error('Erro products:', e)),
-          fetchCategories().then(() => console.log('[DEBUG] Categories loaded')).catch(e => console.error('Erro categories:', e)),
-          fetchGroups().then(() => console.log('[DEBUG] Groups loaded')).catch(e => console.error('Erro groups:', e)),
-          fetchCoupons().then(() => console.log('[DEBUG] Coupons loaded')).catch(e => console.error('Erro coupons:', e)),
-          fetchOrders().then(() => console.log('[DEBUG] Orders loaded')).catch(e => console.error('Erro orders:', e)),
-          fetchSettings().then(() => console.log('[DEBUG] Settings loaded')).catch(e => console.error('Erro settings:', e))
+          safeFetch(fetchProducts, 'Products'),
+          safeFetch(fetchCategories, 'Categories'),
+          safeFetch(fetchGroups, 'Groups'),
+          safeFetch(fetchCoupons, 'Coupons'),
+          safeFetch(fetchOrders, 'Orders'),
+          safeFetch(fetchSettings, 'Settings')
         ]);
 
         console.log('[DEBUG] All fetches finished');
