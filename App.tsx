@@ -66,35 +66,60 @@ const fileToBase64 = (file: File): Promise<string> => {
 // --- Custom Hooks ---
 
 const usePersistedState = <T,>(key: string, initialValue: T) => {
-  const [state, setState] = useState<T>(initialValue);
+  // 1. Try synchronous load from localStorage first (Instant render for web)
+  const [state, setState] = useState<T>(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        const item = localStorage.getItem(key);
+        // Only parse if it looks like JSON or a value we expect
+        return item ? JSON.parse(item) : initialValue;
+      }
+    } catch (error) {
+      console.log(`[DEBUG] Error reading localStorage synchronously for ${key}:`, error);
+    }
+    return initialValue;
+  });
+
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Load initial state
+  // Load initial state (Async from Preferences)
   useEffect(() => {
     let isMounted = true;
+    let hasLoaded = false;
+
+    // Safety Force Load Timeout - Ensures app never hangs forever
+    const safetyTimeout = setTimeout(() => {
+      if (isMounted && !hasLoaded) {
+        console.log(`[DEBUG] SAFETY TIMEOUT for ${key} - Forcing isLoaded=true`);
+        setIsLoaded(true);
+        hasLoaded = true;
+      }
+    }, 2000); // 2 seconds safety valve
 
     const loadState = async () => {
       try {
-        console.log(`[DEBUG] Loading state for ${key}...`);
+        console.log(`[DEBUG] Async loading ${key} from Preferences...`);
 
         // Helper to get from Preferences with timeout
         const getFromPreferences = async (): Promise<string | null> => {
           try {
-            // Create a promise that rejects after 1000ms
+            if (typeof Preferences === 'undefined') {
+              throw new Error('Preferences is undefined');
+            }
+
             const timeoutPromise = new Promise<null>((_, reject) =>
               setTimeout(() => reject(new Error('Timeout')), 1000)
             );
 
-            // Race between actual get and timeout
             const result = await Promise.race([
               Preferences.get({ key }),
               timeoutPromise
             ]) as { value: string | null };
 
             return result.value;
-          } catch (e) {
-            console.warn(`[DEBUG] Preferences load failed/timed out for ${key}:`, e);
-            throw e; // Re-throw to trigger fallback
+          } catch (e: any) {
+            console.log(`[DEBUG] Preferences issue for ${key}: ${e.message}`);
+            throw e;
           }
         };
 
@@ -104,14 +129,17 @@ const usePersistedState = <T,>(key: string, initialValue: T) => {
           loadedValue = await getFromPreferences();
           console.log(`[DEBUG] Preferences success for ${key}:`, loadedValue);
         } catch (err) {
-          // Fallback to localStorage
-          console.log(`[DEBUG] Falling back to localStorage for ${key}`);
+          // Fallback to localStorage (already loaded manually, but good to check if we missed anything or if this logic runs)
+          console.log(`[DEBUG] Falling back to localStorage check for ${key}`);
           loadedValue = localStorage.getItem(key);
         }
 
         if (loadedValue && isMounted) {
           try {
-            setState(JSON.parse(loadedValue));
+            const parsed = JSON.parse(loadedValue);
+            // Only update if different (deep comparison ideally, but strictly JSON string compare is fast enough for now if we didn't change format)
+            // Actually, we can just setState. React handles efficient updates.
+            setState(parsed);
           } catch (e) {
             console.error(`[DEBUG] JSON parse error for ${key}:`, e);
           }
@@ -119,9 +147,11 @@ const usePersistedState = <T,>(key: string, initialValue: T) => {
       } catch (error) {
         console.error(`Error loading ${key}: `, error);
       } finally {
-        if (isMounted) {
+        if (isMounted && !hasLoaded) {
           setIsLoaded(true);
+          hasLoaded = true;
           console.log(`[DEBUG] Loaded ${key} - Finished (setIsLoaded(true))`);
+          clearTimeout(safetyTimeout);
         }
       }
     };
@@ -130,25 +160,24 @@ const usePersistedState = <T,>(key: string, initialValue: T) => {
 
     return () => {
       isMounted = false;
+      clearTimeout(safetyTimeout);
     };
   }, [key]);
 
-  // Save state on change (only after initial load)
+  // Save state on change
   useEffect(() => {
-    if (!isLoaded) return;
-
     const saveState = async () => {
       try {
         const value = JSON.stringify(state);
-        // Save to both for redundancy during transition/issues
-        await Preferences.set({ key, value });
         localStorage.setItem(key, value);
+        await Preferences.set({ key, value });
       } catch (error) {
         console.error(`Error saving ${key}: `, error);
       }
     };
+    // Debounce or just save
     saveState();
-  }, [key, state, isLoaded]);
+  }, [key, state]); // Removed isLoaded dependency to ensure immediate saves if local changes happen quickly
 
   return [state, setState, isLoaded] as const;
 };
