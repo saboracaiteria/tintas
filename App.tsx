@@ -169,6 +169,11 @@ const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   const isStorageLoaded = cartLoaded && roleLoaded && couponLoaded;
 
+  // DEBUG LOGGING
+  useEffect(() => {
+    console.log(`[DEBUG] Storage Loaded Status: Cart=${cartLoaded}, Role=${roleLoaded}, Coupon=${couponLoaded} => Total=${isStorageLoaded}`);
+  }, [cartLoaded, roleLoaded, couponLoaded]);
+
   // Dados do Supabase
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -286,17 +291,22 @@ const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   useEffect(() => {
     const init = async () => {
+      console.log('[DEBUG] init() started');
       try {
+        console.log('[DEBUG] Calling fetchData()...');
         await fetchData();
+        console.log('[DEBUG] fetchData() completed');
       } catch (error) {
-        console.error('Erro fatal ao carregar dados:', error);
+        console.error('[DEBUG] Erro fatal ao carregar dados:', error);
       } finally {
         setLoading(false);
-        console.log('App loaded', new Date().toISOString());
+        console.log('[DEBUG] App loaded (finally block executed)', new Date().toISOString());
       }
     };
     if (isStorageLoaded) {
       init();
+    } else {
+      console.log('[DEBUG] Waiting for storage to load...');
     }
   }, [isStorageLoaded]);
 
