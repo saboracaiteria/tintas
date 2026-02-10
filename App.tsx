@@ -545,7 +545,6 @@ const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         deliveryCloseTime: data.delivery_close_time || '21:00',
         instagramUrl: data.instagram_url,
         businessAddress: data.business_address,
-        businessAddress: data.business_address,
         copyrightText: data.copyright_text || "© 2025 Casa das Cores",
         productDetailSettings: data.product_detail_settings || {}
       });
@@ -3785,6 +3784,18 @@ const AppContent = () => {
         <Route path="/panel/inventory" element={
           <InventoryPage products={products} />
         } />
+
+        {/* Route for Tintas (Paints) - Redirect to Products with category filter or show specific page */}
+        <Route path="/tintas" element={<ProductsPage
+          products={products.filter(p => p.categoryId === 'tintas' || p.categoryId === '1')} // Assuming '1' or 'tintas' is the ID
+          categories={categories}
+          groups={groups}
+          addProduct={addProduct}
+          updateProduct={updateProduct}
+          deleteProduct={deleteProduct}
+          reorderProducts={reorderProducts}
+        />}
+        />
       </Routes>
 
       {!isAdminRoute && <Sidebar />}
