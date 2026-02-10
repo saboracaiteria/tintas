@@ -1,14 +1,7 @@
 import React, { useState, createContext, useContext, useEffect, useMemo, useRef } from 'react';
 import { HashRouter, Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
-import {
-  ShoppingCart, Menu, X, ChevronRight, Minus, Plus, Trash2,
-  MapPin, Phone, CreditCard, Banknote, Clock, Search,
-  ChevronLeft, ChevronDown, ChevronUp, Edit, FileText,
-  Settings, BarChart2, List, Folder, LogOut, CheckCircle,
-  Printer, Tag, ToggleLeft, ToggleRight, Upload, Info, ArrowLeft, AlertCircle,
-  Lock as LockIcon, Palette, Package, MessageSquare, Sparkles, Layout,
-  Star, Heart, Share2, Store, MessageCircle, Check, Filter, Camera, ImageIcon
-} from 'lucide-react';
+import { ChevronLeft, Plus, Edit, Trash2, Upload, Loader2, Save, X, GripVertical, ToggleLeft, ToggleRight, Layout, Search, ChevronRight, Minus, ArrowLeft, Menu, Phone, FileText, Settings, BarChart2, List, Folder, Tag, Palette, Package, Printer, Sparkles, LogOut, CheckCircle, Info, MapPin, Clock, MessageSquare, ShoppingCart, Lock as LockIcon, AlertCircle } from 'lucide-react';
+import { DirectSalesPage } from './src/pages/DirectSalesPage';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Preferences } from '@capacitor/preferences';
 import { usePrinter } from './PrinterContext';
@@ -1635,13 +1628,29 @@ const HomePage = () => {
           isOpen={!!selectedProduct}
           product={selectedProduct}
           onClose={() => setSelectedProduct(null)}
-          onAddToCart={(p, qty) => {
+          onAddToCart={(p, qty, optionsList) => {
+            // Fix: Transform array of options back to Record<id, qty> map
+            const selectedOptionsMap: Record<string, number> = {};
+            let optionsTotal = 0;
+
+            if (optionsList && Array.isArray(optionsList)) {
+              optionsList.forEach((opt: any) => {
+                if (opt.id) {
+                  selectedOptionsMap[opt.id] = 1; // Assuming 1 qty per option selection in the simple UI
+                  if (opt.price) optionsTotal += Number(opt.price);
+                }
+              });
+            }
+
+            // Calculate correct total unit price
+            const unitPrice = p.price + optionsTotal;
+
             addToCart({
               cartId: Date.now().toString(),
               product: p,
               quantity: qty,
-              selectedOptions: {},
-              totalPrice: p.price
+              selectedOptions: selectedOptionsMap,
+              totalPrice: unitPrice
             });
             // Optional: Show toast
           }}
@@ -2030,6 +2039,7 @@ const AdminPanel = () => {
     { title: 'Cupons', icon: <Tag size={32} />, path: '/panel/coupons', role: ['admin'] },
     { title: 'Cores do Site', icon: <Palette size={32} />, path: '/panel/theme', role: ['admin'] },
     { title: 'Estoque', icon: <Package size={32} />, path: '/panel/inventory', role: ['admin'] },
+    { title: 'Venda Direta', icon: <ShoppingCart size={32} />, path: '/panel/pdv', role: ['admin', 'employee'] },
     { title: 'Impressora', icon: <Printer size={32} />, path: '/panel/printer', role: ['admin', 'employee'] },
     { title: 'IA Importar', icon: <Sparkles size={32} />, path: '/panel/ai-import', role: ['admin'] },
   ];
@@ -3824,7 +3834,7 @@ const AppContent = () => {
         <Route path="/panel/inventory" element={<InventoryPage products={products} />} />
         <Route path="/panel/printer" element={<PrinterSettingsPage />} />
         <Route path="/panel/ai-import" element={<AIImportPage />} />
-        <Route path="/panel/theme" element={<ThemeSettingsPage />} />
+        <Route path="/panel/pdv" element={<DirectSalesPage />} />
 
         <Route path="/panel/categories" element={
           <CategoriesPage
