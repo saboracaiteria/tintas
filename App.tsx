@@ -66,7 +66,7 @@ const fileToBase64 = (file: File): Promise<string> => {
 // --- Custom Hooks ---
 
 const usePersistedState = <T,>(key: string, initialValue: T) => {
-  // 1. Try synchronous load from localStorage first (Instant render for web)
+  // 1. Try synchronous load from localStorage first (Instant render)
   const [state, setState] = useState<T>(() => {
     try {
       if (typeof window !== 'undefined') {
@@ -80,104 +80,58 @@ const usePersistedState = <T,>(key: string, initialValue: T) => {
     return initialValue;
   });
 
-  const [isLoaded, setIsLoaded] = useState(false);
+  // 2. Optimistic: Assume loaded immediately so app starts
+  // We keep the state validation but default to true essentially
+  const [isLoaded, setIsLoaded] = useState(true);
 
-  // Load initial state (Async from Preferences)
+  // 3. Background Sync (Fire and forget)
   useEffect(() => {
-    let isMounted = true;
-    let hasLoaded = false;
-
-    // Safety Force Load Timeout - Ensures app never hangs forever
-    const safetyTimeout = setTimeout(() => {
-      if (isMounted && !hasLoaded) {
-        console.log(`[DEBUG] SAFETY TIMEOUT for ${key} - Forcing isLoaded=true`);
-        setIsLoaded(true);
-        hasLoaded = true;
-      }
-    }, 2000); // 2 seconds safety valve
-
-    const loadState = async () => {
+    const syncFromNative = async () => {
       try {
-        console.log(`[DEBUG] Async loading ${key} from Preferences...`);
+        if (typeof Preferences === 'undefined') return;
 
-        // Helper to get from Preferences with timeout
-        const getFromPreferences = async (): Promise<string | null> => {
-          try {
-            if (typeof Preferences === 'undefined') {
-              throw new Error('Preferences is undefined');
-            }
+        console.log(`[DEBUG] Background syncing ${key} from Preferences...`);
+        const { value } = await Preferences.get({ key });
 
-            const timeoutPromise = new Promise<null>((_, reject) =>
-              setTimeout(() => reject(new Error('Timeout')), 1000)
-            );
+        if (value) {
+          const parsed = JSON.parse(value);
+          // Update state if different from localStorage version (simple check)
+          // In a real app we might merge, but replacing is standard for this auth/cart logic
+          setState(parsed);
 
-            const result = await Promise.race([
-              Preferences.get({ key }),
-              timeoutPromise
-            ]) as { value: string | null };
-
-            return result.value;
-          } catch (e: any) {
-            console.log(`[DEBUG] Preferences issue for ${key}: ${e.message}`);
-            throw e;
-          }
-        };
-
-        let loadedValue: string | null = null;
-
-        try {
-          loadedValue = await getFromPreferences();
-          console.log(`[DEBUG] Preferences success for ${key}:`, loadedValue);
-        } catch (err) {
-          // Fallback to localStorage (already loaded manually, but good to check if we missed anything or if this logic runs)
-          console.log(`[DEBUG] Falling back to localStorage check for ${key}`);
-          loadedValue = localStorage.getItem(key);
+          // Ensure localStorage is in sync
+          localStorage.setItem(key, value);
+          console.log(`[DEBUG] Sync success for ${key}`);
         }
-
-        if (loadedValue && isMounted) {
-          try {
-            const parsed = JSON.parse(loadedValue);
-            // Only update if different (deep comparison ideally, but strictly JSON string compare is fast enough for now if we didn't change format)
-            // Actually, we can just setState. React handles efficient updates.
-            setState(parsed);
-          } catch (e) {
-            console.error(`[DEBUG] JSON parse error for ${key}:`, e);
-          }
-        }
-      } catch (error) {
-        console.error(`Error loading ${key}: `, error);
-      } finally {
-        if (isMounted && !hasLoaded) {
-          setIsLoaded(true);
-          hasLoaded = true;
-          console.log(`[DEBUG] Loaded ${key} - Finished (setIsLoaded(true))`);
-          clearTimeout(safetyTimeout);
-        }
+      } catch (e: any) {
+        console.warn(`[DEBUG] Background sync failed for ${key}`, e);
       }
     };
 
-    loadState();
-
-    return () => {
-      isMounted = false;
-      clearTimeout(safetyTimeout);
-    };
+    syncFromNative();
   }, [key]);
 
-  // Save state on change
+  // 4. Save state on change
   useEffect(() => {
     const saveState = async () => {
       try {
         const value = JSON.stringify(state);
+
+        // Sync save to localStorage
         localStorage.setItem(key, value);
-        await Preferences.set({ key, value });
+
+        // Async save to Preferences
+        if (typeof Preferences !== 'undefined') {
+          Preferences.set({ key, value }).catch(e =>
+            console.error(`Error saving ${key} to Preferences: `, e)
+          );
+        }
       } catch (error) {
         console.error(`Error saving ${key}: `, error);
       }
     };
-    // Debounce or just save
     saveState();
-  }, [key, state]); // Removed isLoaded dependency to ensure immediate saves if local changes happen quickly
+  }, [key, state]);
 
   return [state, setState, isLoaded] as const;
 };
