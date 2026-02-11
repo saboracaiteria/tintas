@@ -592,23 +592,23 @@ const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { data } = await supabase.from('settings').select('*').single();
     if (data) {
       setSettings({
-        storeName: data.store_name,
+        storeName: data.store_name || 'Casa das Cores',
         logoUrl: data.logo_url,
         logoShape: data.logo_shape || 'circle',
         bannerUrl: data.banner_url,
-        whatsappNumber: data.whatsapp_number,
-        storeStatus: data.store_status,
-        deliveryFee: data.delivery_fee,
-        deliveryOnly: data.delivery_only,
-        openingHours: data.opening_hours,
-        themeColors: data.theme_colors,
+        whatsappNumber: data.whatsapp_number || '',
+        storeStatus: data.store_status || 'open',
+        deliveryFee: data.delivery_fee || 0,
+        deliveryOnly: data.delivery_only || false,
+        openingHours: data.opening_hours || [], // Garantir array
+        themeColors: data.theme_colors || {},
         closedMessage: data.closed_message || '🔴 Loja Fechada',
         openMessage: data.open_message || '🟢 Aberto até às 23:00',
         deliveryTime: data.delivery_time || '40min à 1h',
         pickupTime: data.pickup_time || '20min à 45min',
         deliveryCloseTime: data.delivery_close_time || '21:00',
-        instagramUrl: data.instagram_url,
-        businessAddress: data.business_address,
+        instagramUrl: data.instagram_url || '',
+        businessAddress: data.business_address || '',
         copyrightText: data.copyright_text || "© 2025 Casa das Cores",
         productDetailSettings: data.product_detail_settings || {}
       });
@@ -1101,14 +1101,8 @@ const Sidebar = () => {
   const navigate = useNavigate();
 
   const handleAdminAccess = () => {
-    if (password === '1245') {
+    if (password === '77788') {
       setAdminRole('admin');
-      navigate('/panel');
-      setShowPassword(false);
-      setSidebarOpen(false);
-      setPassword('');
-    } else if (password === '777') {
-      setAdminRole('employee');
       navigate('/panel');
       setShowPassword(false);
       setSidebarOpen(false);
@@ -3737,7 +3731,12 @@ const SettingsPage = () => {
           </h3>
           <p className="text-xs text-gray-500 mb-4">Configure os horários automáticos de abertura e fechamento</p>
           <div className="space-y-3">
-            {settings.openingHours.map((hour) => (
+            {settings.openingHours?.length === 0 && (
+              <div className="text-center p-4 bg-yellow-50 text-yellow-800 rounded-lg text-sm">
+                Nenhum horário configurado. Clique em "Salvar Configurações" para inicializar os horários padrão.
+              </div>
+            )}
+            {settings.openingHours?.map((hour) => (
               <div key={hour.dayOfWeek} className="border border-gray-200 rounded-lg p-3">
                 <div className="flex items-center justify-between mb-2">
                   <span className="font-medium text-gray-800">{dayNames[hour.dayOfWeek]}</span>
