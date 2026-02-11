@@ -4235,9 +4235,23 @@ const AppContent = () => {
     CapacitorApp.exitApp();
   };
 
+  // FORCE RESET SETTINGS ONCE TO FIX COLORS
+  useEffect(() => {
+    const hasReset = localStorage.getItem('has_reset_colors_v2');
+    if (!hasReset) {
+      localStorage.removeItem('settings');
+      localStorage.setItem('has_reset_colors_v2', 'true');
+      console.log('Settings reset to fix colors');
+      window.location.reload();
+    }
+  }, []);
+
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#ff6b00]">
+      <div
+        className="min-h-screen flex flex-col items-center justify-center"
+        style={{ backgroundColor: '#ff6b00', position: 'fixed', inset: 0, zIndex: 9999 }}
+      >
         <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-white mb-4"></div>
         <p className="text-white text-lg font-bold animate-pulse">CASA DAS CORES - CARREGANDO...</p>
       </div>
