@@ -140,7 +140,7 @@ const Footer = () => {
   return (
     <div className="py-6 px-4 mt-12" style={{ backgroundColor: footerBg, color: footerText }}>
       <div className="max-w-4xl mx-auto">
-        {/* Instagram Link */}
+        {/* Instagram Link (REMOVIDO TEMPORARIAMENTE)
         <div className="flex justify-center mb-4">
           <a
             href={settings.instagramUrl || "https://www.instagram.com/obba_acai_/"}
@@ -154,6 +154,7 @@ const Footer = () => {
             Siga-nos no Instagram
           </a>
         </div>
+        */}
 
         {/* Location & Year */}
         <div className="text-center mb-3">
@@ -165,14 +166,14 @@ const Footer = () => {
         <div className="text-center pt-3 border-t border-gray-700">
           <p className="text-xs">
             Desenvolvido por{' '}
-            <a
+            {/* <a
               href="https://www.instagram.com/_nildoxz/"
               target="_blank"
               rel="noopener noreferrer"
               className="text-purple-400 font-semibold hover:text-purple-300 transition-colors"
             >
               @_nildoxz
-            </a>
+            </a> */}
           </p>
         </div>
       </div>
