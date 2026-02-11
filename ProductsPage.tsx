@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Plus, Edit, Trash2, Upload, Loader2, Save, X, GripVertical, ToggleLeft, ToggleRight, Layout } from 'lucide-react';
+import { ChevronLeft, Plus, Edit, Trash2, Upload, Loader2, Save, X, GripVertical, ToggleLeft, ToggleRight, Layout, Search } from 'lucide-react';
 import { supabase } from './supabaseClient';
 import { ConfirmModal } from './ConfirmModal';
 
@@ -57,6 +57,7 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({
     const [draggedProduct, setDraggedProduct] = useState<Product | null>(null);
     const [dragOverProduct, setDragOverProduct] = useState<string | null>(null);
     const [activeConfirmation, setActiveConfirmation] = useState<{ product: Product, newActive: boolean } | null>(null);
+    const [searchTerm, setSearchTerm] = useState('');
     const navigate = useNavigate();
 
     const handleOpenModal = (product?: Product) => {
@@ -254,7 +255,7 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({
 
     return (
         <div className="min-h-screen bg-gray-100 p-4 pb-20">
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
                     <button onClick={() => navigate('/panel')}><ChevronLeft /></button>
                     <h1 className="text-xl font-bold">Produtos</h1>
@@ -267,30 +268,57 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({
                 </button>
             </div>
 
+            {/* Search Field */}
+            <div className="relative mb-5">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                <input
+                    type="text"
+                    placeholder="Buscar produto por nome..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-300 bg-white shadow-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none text-sm transition-all"
+                />
+                {searchTerm && (
+                    <button
+                        onClick={() => setSearchTerm('')}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                        <X size={18} />
+                    </button>
+                )}
+            </div>
+
             {categories.map(category => {
                 const categoryProducts = products
                     .filter(p => p.categoryId === category.id)
+                    .filter(p => searchTerm === '' || p.name.toLowerCase().includes(searchTerm.toLowerCase()))
                     .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
-                // if (categoryProducts.length === 0) return null; // FIX: Show empty categories
+
+                if (searchTerm && categoryProducts.length === 0) return null;
 
                 return (
                     <div key={category.id} className="mb-6">
                         <h2 className="text-lg font-bold text-gray-700 mb-3 flex items-center gap-2">
                             {category.icon} {category.title}
+                            <span className="text-sm font-normal text-gray-400">({categoryProducts.length})</span>
                         </h2>
-                        <div className="space-y-2">
-                            {categoryProducts.length === 0 && (
-                                <div className="text-gray-400 text-sm italic p-4 text-center border-2 border-dashed border-gray-200 rounded-lg">
-                                    Nenhum produto nesta categoria. Clique em "+ Novo" para adicionar.
-                                </div>
-                            )}
+
+                        {categoryProducts.length === 0 && !searchTerm && (
+                            <div className="text-gray-400 text-sm italic p-4 text-center border-2 border-dashed border-gray-200 rounded-lg">
+                                Nenhum produto nesta categoria. Clique em "+ Novo" para adicionar.
+                            </div>
+                        )}
+
+                        {/* Grid Layout */}
+                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
                             {categoryProducts.map(product => (
                                 <div
                                     key={product.id}
-                                    className={`bg-white p-3 rounded-lg shadow-sm transition-all duration-200 ${dragOverProduct === product.id
-                                        ? 'border-2 border-purple-500 border-dashed bg-purple-50'
-                                        : 'border-2 border-transparent'
-                                        } ${draggedProduct?.id === product.id ? 'opacity-50' : ''}`}
+                                    className={`bg-white rounded-xl shadow-sm overflow-hidden transition-all duration-200 flex flex-col ${dragOverProduct === product.id
+                                            ? 'ring-2 ring-purple-500 ring-dashed bg-purple-50'
+                                            : ''
+                                        } ${draggedProduct?.id === product.id ? 'opacity-50' : ''} ${(product.active ?? true) ? '' : 'opacity-60 grayscale'
+                                        }`}
                                     draggable={inlineEditId !== product.id}
                                     onDragStart={(e) => handleDragStart(e, product)}
                                     onDragEnd={handleDragEnd}
@@ -299,105 +327,115 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({
                                     onDrop={(e) => handleDrop(e, product)}
                                 >
                                     {inlineEditId === product.id ? (
-                                        <div className="flex flex-col gap-2">
-                                            <div className="flex gap-3 items-start">
-                                                <img
-                                                    src={product.image}
-                                                    alt={product.name}
-                                                    className="w-16 h-16 rounded object-cover flex-shrink-0"
-                                                />
-                                                <div className="flex-1 space-y-2">
-                                                    <input
-                                                        className="w-full border p-2 rounded font-bold"
-                                                        placeholder="Nome do Produto"
-                                                        value={inlineEditData.name || ''}
-                                                        onChange={e => setInlineEditData({ ...inlineEditData, name: e.target.value })}
-                                                        autoFocus
-                                                    />
-                                                    <input
-                                                        className="w-full border p-2 rounded text-sm"
-                                                        placeholder="Descrição"
-                                                        value={inlineEditData.description || ''}
-                                                        onChange={e => setInlineEditData({ ...inlineEditData, description: e.target.value })}
-                                                    />
-                                                    <input
-                                                        type="number"
-                                                        step="0.01"
-                                                        className="w-full border p-2 rounded font-bold text-green-600"
-                                                        placeholder="Preço"
-                                                        value={inlineEditData.price || ''}
-                                                        onChange={e => setInlineEditData({ ...inlineEditData, price: parseFloat(e.target.value) })}
-                                                    />
-                                                </div>
-                                            </div>
-                                            <div className="flex gap-2 justify-end">
+                                        /* Inline Edit Mode */
+                                        <div className="p-3 flex flex-col gap-2">
+                                            <img
+                                                src={product.image}
+                                                alt={product.name}
+                                                className="w-full h-28 rounded-lg object-cover"
+                                            />
+                                            <input
+                                                className="w-full border p-2 rounded text-sm font-bold"
+                                                placeholder="Nome"
+                                                value={inlineEditData.name || ''}
+                                                onChange={e => setInlineEditData({ ...inlineEditData, name: e.target.value })}
+                                                autoFocus
+                                            />
+                                            <input
+                                                className="w-full border p-2 rounded text-xs"
+                                                placeholder="Descrição"
+                                                value={inlineEditData.description || ''}
+                                                onChange={e => setInlineEditData({ ...inlineEditData, description: e.target.value })}
+                                            />
+                                            <input
+                                                type="number"
+                                                step="0.01"
+                                                className="w-full border p-2 rounded text-sm font-bold text-green-600"
+                                                placeholder="Preço"
+                                                value={inlineEditData.price || ''}
+                                                onChange={e => setInlineEditData({ ...inlineEditData, price: parseFloat(e.target.value) })}
+                                            />
+                                            <div className="flex gap-1">
                                                 <button
                                                     onClick={handleInlineSave}
-                                                    className="px-4 py-2 bg-green-100 text-green-700 hover:bg-green-200 rounded font-bold flex items-center gap-1 transition-colors"
+                                                    className="flex-1 py-1.5 bg-green-100 text-green-700 hover:bg-green-200 rounded text-xs font-bold flex items-center justify-center gap-1"
                                                 >
-                                                    <Save size={16} /> Salvar
+                                                    <Save size={14} /> Salvar
                                                 </button>
                                                 <button
                                                     onClick={handleInlineCancel}
-                                                    className="px-4 py-2 text-gray-600 hover:bg-gray-50 rounded font-bold flex items-center gap-1"
+                                                    className="flex-1 py-1.5 text-gray-600 hover:bg-gray-100 rounded text-xs font-bold flex items-center justify-center gap-1"
                                                 >
-                                                    <X size={16} /> Cancelar
+                                                    <X size={14} /> Cancelar
                                                 </button>
                                             </div>
                                         </div>
                                     ) : (
-                                        <div className="flex gap-3">
-                                            {/* Drag Handle */}
-                                            <div
-                                                className="flex items-center justify-center cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 flex-shrink-0"
-                                                title="Arraste para reordenar"
-                                            >
-                                                <GripVertical size={20} />
-                                            </div>
-                                            <img
-                                                src={product.image}
-                                                alt={product.name}
-                                                className={`w-16 h-16 rounded object-cover ${(product.active ?? true) ? '' : 'opacity-40 grayscale'}`}
-                                                data-img-type="product"
-                                                data-img-id={product.id}
-                                            />
-                                            <div className={`flex-1 ${(product.active ?? true) ? '' : 'opacity-50'}`}>
-                                                <p className="font-bold">{product.name}</p>
-                                                <p className="text-sm text-gray-500">{product.description}</p>
-                                                <p className="text-green-600 font-bold">R$ {product.price.toFixed(2)}</p>
-                                            </div>
-                                            <div className="flex flex-col gap-1">
-                                                {/* Toggle Active/Inactive */}
+                                        /* Normal Card View */
+                                        <>
+                                            {/* Product Image */}
+                                            <div className="relative h-32 w-full overflow-hidden bg-gray-50">
+                                                <img
+                                                    src={product.image}
+                                                    alt={product.name}
+                                                    className="w-full h-full object-cover"
+                                                    data-img-type="product"
+                                                    data-img-id={product.id}
+                                                />
+                                                {/* Drag indicator */}
+                                                <div
+                                                    className="absolute top-1 left-1 bg-white/80 rounded p-0.5 cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600"
+                                                    title="Arraste para reordenar"
+                                                >
+                                                    <GripVertical size={14} />
+                                                </div>
+                                                {/* Active toggle badge */}
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); handleToggleActiveClick(product); }}
-                                                    className={`p-2 rounded transition-colors ${(product.active ?? true) ? 'text-green-600 hover:bg-green-50' : 'text-gray-400 hover:bg-gray-100'}`}
-                                                    title={(product.active ?? true) ? 'Desativar Produto' : 'Ativar Produto'}
+                                                    className={`absolute top-1 right-1 rounded-full p-1 transition-colors ${(product.active ?? true)
+                                                            ? 'bg-green-500 text-white'
+                                                            : 'bg-gray-400 text-white'
+                                                        }`}
+                                                    title={(product.active ?? true) ? 'Desativar' : 'Ativar'}
                                                 >
-                                                    {(product.active ?? true) ? <ToggleRight size={22} /> : <ToggleLeft size={22} />}
+                                                    {(product.active ?? true) ? <ToggleRight size={14} /> : <ToggleLeft size={14} />}
                                                 </button>
+                                            </div>
+
+                                            {/* Product Info */}
+                                            <div className="p-2.5 flex-1 flex flex-col">
+                                                <p className="font-bold text-sm text-gray-800 leading-tight line-clamp-2 mb-1">{product.name}</p>
+                                                {product.description && (
+                                                    <p className="text-[11px] text-gray-400 line-clamp-1 mb-1">{product.description}</p>
+                                                )}
+                                                <p className="text-green-600 font-extrabold text-sm mt-auto">R$ {product.price.toFixed(2)}</p>
+                                            </div>
+
+                                            {/* Action Buttons */}
+                                            <div className="flex border-t border-gray-100">
                                                 <button
                                                     onClick={() => handleInlineEdit(product)}
-                                                    className="p-2 text-green-600 hover:bg-green-50 rounded"
+                                                    className="flex-1 py-2 text-green-600 hover:bg-green-50 flex items-center justify-center gap-1 text-xs font-medium transition-colors"
                                                     title="Editar Rápido"
                                                 >
-                                                    <Save size={18} />
+                                                    <Save size={14} />
                                                 </button>
                                                 <button
                                                     onClick={() => handleOpenModal(product)}
-                                                    className="p-2 text-blue-600 hover:bg-blue-50 rounded"
+                                                    className="flex-1 py-2 text-blue-600 hover:bg-blue-50 flex items-center justify-center gap-1 text-xs font-medium transition-colors border-x border-gray-100"
                                                     title="Editar Completo"
                                                 >
-                                                    <Edit size={18} />
+                                                    <Edit size={14} />
                                                 </button>
                                                 <button
                                                     onClick={() => setDeleteConfirmation({ id: product.id, name: product.name })}
-                                                    className="p-2 text-red-600 hover:bg-red-50 rounded"
+                                                    className="flex-1 py-2 text-red-600 hover:bg-red-50 flex items-center justify-center gap-1 text-xs font-medium transition-colors"
                                                     title="Deletar"
                                                 >
-                                                    <Trash2 size={18} />
+                                                    <Trash2 size={14} />
                                                 </button>
                                             </div>
-                                        </div>
+                                        </>
                                     )}
                                 </div>
                             ))}

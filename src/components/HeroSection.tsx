@@ -24,7 +24,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onCtaClick }) => {
             <div
                 className="absolute inset-0"
                 style={{
-                    background: 'linear-gradient(to top, rgba(26, 35, 81, 0.95) 0%, rgba(26, 35, 81, 0.5) 40%, rgba(26, 35, 81, 0.35) 100%)',
+                    background: 'linear-gradient(to top, rgba(26, 35, 81, 0.70) 0%, rgba(26, 35, 81, 0.25) 40%, rgba(26, 35, 81, 0.15) 100%)',
                 }}
             />
 
