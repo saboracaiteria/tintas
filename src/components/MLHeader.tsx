@@ -34,7 +34,7 @@ export const MLHeader = () => {
                                 textShadow: '0 2px 8px rgba(242, 101, 34, 0.3)',
                             }}
                         >
-                            {settings.storeName || "Inova Tintas"}
+                            {settings.storeName || "Casa das Cores"}
                         </span>
                     </div>
 
