@@ -815,16 +815,30 @@ const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const updateCategory = async (c: Category) => {
     const prevCategories = categories;
     setCategories(prev => prev.map(cat => cat.id === c.id ? c : cat)); // Optimistic
-    const { error } = await supabase.from('categories').update({
+    const payload: Record<string, any> = {
       title: c.title,
       icon: c.icon,
-      active: c.active,
-      display_order: c.displayOrder
-    }).eq('id', c.id);
+    };
+    if (c.active !== undefined) payload.active = c.active;
+    if (c.displayOrder !== undefined) payload.display_order = c.displayOrder;
+    const { error } = await supabase.from('categories').update(payload).eq('id', c.id);
     if (error) {
       console.error("ERRO AO ATUALIZAR CATEGORIA:", error);
-      alert("Erro ao salvar categoria: " + error.message);
-      setCategories(prevCategories); // Rollback
+      // If error is about missing column, retry with just title+icon
+      if (error.message?.includes('column') || error.message?.includes('schema')) {
+        console.warn("Retrying update with basic fields only...");
+        const { error: retryError } = await supabase.from('categories').update({
+          title: c.title,
+          icon: c.icon,
+        }).eq('id', c.id);
+        if (retryError) {
+          alert("Erro ao salvar categoria: " + retryError.message);
+          setCategories(prevCategories);
+        }
+      } else {
+        alert("Erro ao salvar categoria: " + error.message);
+        setCategories(prevCategories); // Rollback
+      }
     }
   };
 
