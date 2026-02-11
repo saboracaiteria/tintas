@@ -813,12 +813,19 @@ const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   };
 
   const updateCategory = async (c: Category) => {
+    const prevCategories = categories;
     setCategories(prev => prev.map(cat => cat.id === c.id ? c : cat)); // Optimistic
-    await supabase.from('categories').update({
+    const { error } = await supabase.from('categories').update({
       title: c.title,
       icon: c.icon,
-      active: c.active // Include active status
+      active: c.active,
+      display_order: c.displayOrder
     }).eq('id', c.id);
+    if (error) {
+      console.error("ERRO AO ATUALIZAR CATEGORIA:", error);
+      alert("Erro ao salvar categoria: " + error.message);
+      setCategories(prevCategories); // Rollback
+    }
   };
 
   const deleteCategory = async (id: string) => {
