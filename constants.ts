@@ -16,10 +16,11 @@ export const GROUPS: ProductGroup[] = [];
 export const PRODUCTS: Product[] = [];
 
 export const PAYMENT_METHODS = [
-  'Dinheiro',
-  'Cartão de Débito',
-  'Cartão de Crédito',
   'Pix',
+  'Cartão de Débito',
+  'Cartão de Crédito à Vista',
+  'Crédito Parcelado 4x',
+  'Dinheiro',
 ];
 
 export const INITIAL_COUPONS: Coupon[] = [];

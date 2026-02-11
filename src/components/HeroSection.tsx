@@ -20,24 +20,42 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onCtaClick }) => {
                 style={{ backgroundImage: `url(${backgroundImage})` }}
             />
 
-            {/* Gradient Overlay for Readability */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/30 md:bg-gradient-to-r md:from-black/80 md:via-black/40 md:to-transparent" />
+            {/* Gradient Overlay - Azul Navy Inova */}
+            <div
+                className="absolute inset-0"
+                style={{
+                    background: 'linear-gradient(to top, rgba(26, 35, 81, 0.95) 0%, rgba(26, 35, 81, 0.5) 40%, rgba(26, 35, 81, 0.35) 100%)',
+                }}
+            />
 
             {/* Content Container */}
             <div className="relative h-full max-w-7xl mx-auto px-4 flex flex-col justify-center items-start text-white">
 
                 {/* Badge / Tag */}
-                <div className="mb-4 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-xs font-semibold uppercase tracking-wider animate-fade-in-up">
+                <div className="mb-4 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md border border-white/20 text-xs font-semibold uppercase tracking-wider animate-fade-in-up">
                     <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
                     {settings.storeStatus === 'open' ? 'Loja Aberta' : 'Entregas Rápidas'}
                 </div>
 
-                {/* Main Title with specific styling for 'Casa das Cores' brand feel */}
-                <h1 className="text-4xl md:text-6xl font-extrabold leading-tight mb-4 max-w-2xl text-shadow-lg animate-fade-in-up delay-100">
-                    <span className="block text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">
-                        {settings.storeName || "Casa das Cores"}
+                {/* Main Title - Inova Tintas Style */}
+                <h1 className="leading-tight mb-4 max-w-2xl animate-fade-in-up delay-100">
+                    <span
+                        className="block text-5xl md:text-7xl"
+                        style={{
+                            fontFamily: "'Bebas Neue', 'Impact', 'Arial Black', sans-serif",
+                            color: '#f26522',
+                            letterSpacing: '3px',
+                            textShadow: '0 4px 16px rgba(242, 101, 34, 0.4), 0 2px 4px rgba(0,0,0,0.3)',
+                        }}
+                    >
+                        {settings.storeName || "Inova Tintas"}
                     </span>
-                    <span className="block text-white">
+                    <span
+                        className="block text-2xl md:text-4xl font-extrabold text-white mt-1"
+                        style={{
+                            textShadow: '0 2px 8px rgba(0,0,0,0.3)',
+                        }}
+                    >
                         Pintando o seu mundo.
                     </span>
                 </h1>
@@ -51,7 +69,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onCtaClick }) => {
                 <div className="flex flex-col sm:flex-row gap-4 animate-fade-in-up delay-300">
                     <button
                         onClick={onCtaClick}
-                        className="px-8 py-4 bg-gradient-to-r from-orange-500 to-red-600 text-white font-bold rounded-full shadow-lg hover:shadow-orange-500/30 hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2 group/btn"
+                        className="px-8 py-4 text-white font-bold rounded-full shadow-lg hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2 group/btn"
+                        style={{
+                            background: 'linear-gradient(135deg, #f26522, #ff8844)',
+                            boxShadow: '0 8px 24px rgba(242, 101, 34, 0.4)',
+                        }}
                     >
                         Ver Ofertas
                         <ArrowRight className="group-hover/btn:translate-x-1 transition-transform" />
@@ -74,7 +96,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onCtaClick }) => {
                 <ChevronDown size={32} />
             </div>
 
-            {/* CSS Animations (Inline for simplicity, or could come from global CSS) */}
+            {/* CSS Animations */}
             <style>{`
         @keyframes fadeInUp {
           from { opacity: 0; transform: translateY(20px); }

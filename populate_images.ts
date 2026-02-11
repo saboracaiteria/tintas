@@ -1,108 +1,202 @@
-
 import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
-import path from 'path';
-
-// Load environment variables
 dotenv.config({ path: '.env.local' });
 
-const supabaseUrl = process.env.VITE_SUPABASE_URL;
-const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY;
+const supabase = createClient(
+    process.env.VITE_SUPABASE_URL!,
+    process.env.VITE_SUPABASE_ANON_KEY!
+);
 
-if (!supabaseUrl || !supabaseKey) {
-    console.error('Missing Supabase credentials');
-    process.exit(1);
-}
-
-const supabase = createClient(supabaseUrl, supabaseKey);
-
-// Keyword to Image URL Mapping (Representative/Similar Images)
-// Using Unsplash source URLs for high quality "similar" images
+// =======================================================
+// Mapeamento de palavras-chave -> URLs de imagens reais
+// Usando imagens do Unsplash (acesso gratuito via source)
+// =======================================================
 const IMAGE_MAP: Record<string, string> = {
-    // Using placehold.co for reliable generation with text
-    'tinta': 'https://placehold.co/800x800/2563eb/white?text=Tinta',
-    'esmalte': 'https://placehold.co/800x800/db2777/white?text=Esmalte',
-    'vivacor': 'https://placehold.co/800x800/7c3aed/white?text=Vivacor',
-    'spray': 'https://placehold.co/800x800/ea580c/white?text=Spray',
+    // TINTAS - latas de tinta coloridas
+    'tinta_branco': 'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=800&h=800&fit=crop&q=80',
+    'tinta_colorida': 'https://images.unsplash.com/photo-1562259949-e8e7689d7828?w=800&h=800&fit=crop&q=80',
+    'tinta_generica': 'https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=800&h=800&fit=crop&q=80',
 
-    // Accessories
-    'rolo': 'https://placehold.co/800x800/16a34a/white?text=Rolo',
-    'pincel': 'https://placehold.co/800x800/ca8a04/white?text=Pincel',
-    'lixa': 'https://placehold.co/800x800/4b5563/white?text=Lixa',
-    'espatula': 'https://placehold.co/800x800/9ca3af/white?text=Espatula',
-    'argamassa': 'https://placehold.co/800x800/57534e/white?text=Argamassa',
+    // ESMALTE - tinta esmalte
+    'esmalte': 'https://images.unsplash.com/photo-1572726729207-a78d6feb18d7?w=800&h=800&fit=crop&q=80',
 
-    // Construction / Waterproofing
-    'manta': 'https://placehold.co/800x800/1e293b/white?text=Manta',
-    'vedacit': 'https://placehold.co/800x800/0f172a/white?text=Impermeabilizante',
+    // SPRAY
+    'spray': 'https://images.unsplash.com/photo-1635048424329-a9bfb146d7aa?w=800&h=800&fit=crop&q=80',
 
-    // Default fallback
-    'default': 'https://placehold.co/800x800/e2e8f0/1e293b?text=Produto'
+    // VERNIZ - lata verniz madeira
+    'verniz': 'https://images.unsplash.com/photo-1594844532765-2e735422ac44?w=800&h=800&fit=crop&q=80',
+
+    // ROLO de pintura
+    'rolo': 'https://images.unsplash.com/photo-1562259949-e8e7689d7828?w=800&h=800&fit=crop&q=80',
+
+    // PINCEL / TRINCHA  
+    'pincel': 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=800&h=800&fit=crop&q=80',
+
+    // LIXA
+    'lixa': 'https://images.unsplash.com/photo-1504148455328-c376907d081c?w=800&h=800&fit=crop&q=80',
+
+    // MASSA CORRIDA / MASSA PVA
+    'massa': 'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?w=800&h=800&fit=crop&q=80',
+
+    // ARGAMASSA / REJUNTE
+    'argamassa': 'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?w=800&h=800&fit=crop&q=80',
+
+    // IMPERMEABILIZANTE / VEDACIT / VEDAPREN
+    'impermeabilizante': 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=800&h=800&fit=crop&q=80',
+
+    // MANTA ASFÁLTICA
+    'manta': 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=800&h=800&fit=crop&q=80',
+
+    // SELADOR / FUNDO PREPARADOR
+    'selador': 'https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=800&h=800&fit=crop&q=80',
+
+    // SOLVENTE / THINNER / AGUARRAS
+    'solvente': 'https://images.unsplash.com/photo-1532187863486-abf4dbce1253?w=800&h=800&fit=crop&q=80',
+
+    // FITA / ADESIVO
+    'fita': 'https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=800&h=800&fit=crop&q=80',
+
+    // TEXTURA
+    'textura': 'https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=800&h=800&fit=crop&q=80',
+
+    // TELHA / COBERTURA
+    'telha': 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=800&h=800&fit=crop&q=80',
+
+    // FERRAMENTAS / ACESSÓRIOS
+    'ferramenta': 'https://images.unsplash.com/photo-1581783898377-1c85bf937427?w=800&h=800&fit=crop&q=80',
+
+    // VARAL
+    'varal': 'https://images.unsplash.com/photo-1581783898377-1c85bf937427?w=800&h=800&fit=crop&q=80',
+
+    // LONA
+    'lona': 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=800&h=800&fit=crop&q=80',
+
+    // PRODUTO GENÉRICO
+    'default': 'https://images.unsplash.com/photo-1581783898377-1c85bf937427?w=800&h=800&fit=crop&q=80',
 };
 
-// Refined Specific Maps (Not needed for simple placeholders, merging into main logic)
-const SPECIFIC_MAP: Record<string, string> = {};
+// Determina a melhor imagem baseada no nome do produto
+function getImageForProduct(name: string): string {
+    const n = name.toLowerCase();
 
-async function populateImages() {
-    console.log('Fetching products...');
+    // --- SPRAY ---
+    if (n.includes('spray')) return IMAGE_MAP['spray'];
 
-    // 1. Fetch all products
+    // --- VERNIZ ---
+    if (n.includes('verniz')) return IMAGE_MAP['verniz'];
+
+    // --- ESMALTE ---
+    if (n.includes('esmalte')) return IMAGE_MAP['esmalte'];
+
+    // --- MASSA ---
+    if (n.includes('massa corrida') || n.includes('massa pva') || n.includes('massa acrilica'))
+        return IMAGE_MAP['massa'];
+
+    // --- SELADOR / FUNDO ---
+    if (n.includes('selador') || n.includes('fundo preparador'))
+        return IMAGE_MAP['selador'];
+
+    // --- SOLVENTE / THINNER / AGUARRAS ---
+    if (n.includes('solvente') || n.includes('thinner') || n.includes('aguarras') || n.includes('aguarraz'))
+        return IMAGE_MAP['solvente'];
+
+    // --- IMPERMEABILIZANTE ---
+    if (n.includes('vedacit') || n.includes('vedapren') || n.includes('impermeabilizante') || n.includes('tecplus'))
+        return IMAGE_MAP['impermeabilizante'];
+
+    // --- MANTA ---
+    if (n.includes('manta')) return IMAGE_MAP['manta'];
+
+    // --- ARGAMASSA / REJUNTE ---
+    if (n.includes('argamassa') || n.includes('rejunte'))
+        return IMAGE_MAP['argamassa'];
+
+    // --- TEXTURA ---
+    if (n.includes('textura') || n.includes('grafiato'))
+        return IMAGE_MAP['textura'];
+
+    // --- LIXA ---
+    if (n.includes('lixa')) return IMAGE_MAP['lixa'];
+
+    // --- ROLO ---
+    if (n.includes('rolo')) return IMAGE_MAP['rolo'];
+
+    // --- PINCEL / TRINCHA ---
+    if (n.includes('pincel') || n.includes('trincha'))
+        return IMAGE_MAP['pincel'];
+
+    // --- FITA ---
+    if (n.includes('fita')) return IMAGE_MAP['fita'];
+
+    // --- VARAL ---
+    if (n.includes('varal')) return IMAGE_MAP['varal'];
+
+    // --- LONA ---
+    if (n.includes('lona')) return IMAGE_MAP['lona'];
+
+    // --- TELHA ---
+    if (n.includes('telha')) return IMAGE_MAP['telha'];
+
+    // --- TINTAS (mais genérico, deixar por último) ---
+    if (n.includes('branco') || n.includes('gelo') || n.includes('neve'))
+        return IMAGE_MAP['tinta_branco'];
+    if (n.includes('tinta') || n.includes('vivacor') || n.includes('veloz') ||
+        n.includes('elite') || n.includes('leinertex') || n.includes('renove') ||
+        n.includes('semi brilho') || n.includes('acrilica') || n.includes('latex'))
+        return IMAGE_MAP['tinta_colorida'];
+
+    // --- FERRAMENTAS genéricas ---
+    if (n.includes('espatula') || n.includes('desempenadeira') || n.includes('bandeja'))
+        return IMAGE_MAP['ferramenta'];
+
+    // --- DEFAULT ---
+    return IMAGE_MAP['default'];
+}
+
+async function updateImages() {
+    console.log('🎨 Buscando todos os produtos...');
+
     const { data: products, error } = await supabase
         .from('products')
-        .select('id, name, image')
-        .or('image.is.null,image.eq.""'); // Only update ones without images? Or all? User said "populate... to start using", likely implied all or missing. Let's do all to ensure consistency if requested, but safest to do missing first.
-    // Actually, user said "busque... para formar a base". Let's update ALL to safeguard.
+        .select('id, name, active')
+        .order('name');
 
-    // Let's just fetch all for now and check client side to save reads if needed, or better, just update what needs updating.
-    // We'll update ALL to ensure they have the new "premium" images.
-    const { data: allProducts, error: allErr } = await supabase.from('products').select('id, name');
-
-    if (allErr) {
-        console.error('Error fetching products:', allErr);
+    if (error || !products) {
+        console.error('Erro:', error);
         return;
     }
 
-    console.log(`Found ${allProducts?.length} products.`);
+    console.log(`📦 Total: ${products.length} produtos\n`);
 
-    let updatedCount = 0;
+    let updated = 0;
+    let failed = 0;
+    const batchSize = 20;
 
-    // Process in batches for performance
-    const batchSize = 25;
-    for (let i = 0; i < allProducts.length; i += batchSize) {
-        const batch = allProducts.slice(i, i + batchSize);
+    for (let i = 0; i < products.length; i += batchSize) {
+        const batch = products.slice(i, i + batchSize);
 
         await Promise.all(batch.map(async (product) => {
-            const nameLower = product.name.toLowerCase();
-            let imageUrl = IMAGE_MAP['default'];
+            const imageUrl = getImageForProduct(product.name);
 
-            // Determine Image based on keywords priority
-            if (nameLower.includes('spray')) imageUrl = IMAGE_MAP['spray'];
-            else if (nameLower.includes('esmalte')) imageUrl = IMAGE_MAP['esmalte'];
-            else if (nameLower.includes('vivacor') || nameLower.includes('tinta')) imageUrl = IMAGE_MAP['tinta'];
-            else if (nameLower.includes('rolo')) imageUrl = SPECIFIC_MAP['rolo'] || IMAGE_MAP['rolo'];
-            else if (nameLower.includes('pincel') || nameLower.includes('trincha')) imageUrl = IMAGE_MAP['pincel'];
-            else if (nameLower.includes('lixa')) imageUrl = IMAGE_MAP['lixa'];
-            else if (nameLower.includes('espatula')) imageUrl = IMAGE_MAP['espatula'];
-            else if (nameLower.includes('argamassa')) imageUrl = IMAGE_MAP['argamassa'];
-            else if (nameLower.includes('manta') || nameLower.includes('vedacit') || nameLower.includes('impermeabilizante')) imageUrl = IMAGE_MAP['vedacit'];
-
-            // Update product
             const { error: updateErr } = await supabase
                 .from('products')
                 .update({ image: imageUrl })
                 .eq('id', product.id);
 
             if (updateErr) {
-                console.error(`Failed to update ${product.name}:`, updateErr);
+                console.error(`❌ ${product.name}: ${updateErr.message}`);
+                failed++;
             } else {
-                updatedCount++;
+                updated++;
             }
         }));
 
-        console.log(`Updated batch ${i + batchSize} / ${allProducts.length}...`);
+        console.log(`🔄 Processado ${Math.min(i + batchSize, products.length)}/${products.length}...`);
     }
 
-    console.log(`Finished! Updated ${updatedCount} products.`);
+    console.log(`\n✅ Atualização concluída!`);
+    console.log(`   ✅ Atualizados: ${updated}`);
+    console.log(`   ❌ Falhas: ${failed}`);
 }
 
-populateImages();
+updateImages();

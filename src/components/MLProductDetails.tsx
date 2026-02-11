@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, Heart, Share2, Award, ShieldCheck, Truck } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { supabase } from '../../supabaseClient';
 
@@ -23,7 +24,7 @@ interface MLProductDetailsProps {
 export const MLProductDetails: React.FC<MLProductDetailsProps> = ({ product, isOpen, onClose, onAddToCart }) => {
     if (!isOpen) return null;
 
-
+    const navigate = useNavigate();
     const [selectedOptions, setSelectedOptions] = useState<Record<string, any>>({});
     const [productGroups, setProductGroups] = useState<any[]>([]);
     const [quantity, setQuantity] = useState(1);
@@ -93,6 +94,24 @@ export const MLProductDetails: React.FC<MLProductDetailsProps> = ({ product, isO
             ...prev,
             [group.id]: option
         }));
+    };
+
+    // Valida se todas as opções obrigatórias foram selecionadas
+    const validateRequiredOptions = (): boolean => {
+        const missing = productGroups.filter(g => g.min > 0 && !selectedOptions[g.id]);
+        if (missing.length > 0) {
+            alert(`Por favor, selecione: ${missing.map((g: any) => g.title).join(', ')}`);
+            return false;
+        }
+        return true;
+    };
+
+    // Adiciona produto ao carrinho (reutilizado pelos dois botões)
+    const handleAddToCart = (): boolean => {
+        if (!validateRequiredOptions()) return false;
+        const optionsList = Object.values(selectedOptions);
+        onAddToCart(product, quantity, optionsList);
+        return true;
     };
 
     const calculateTotal = () => {
@@ -241,21 +260,22 @@ export const MLProductDetails: React.FC<MLProductDetailsProps> = ({ product, isO
 
                                 {/* Buttons */}
                                 <div className="flex flex-col gap-3">
-                                    <button className="w-full bg-[#3483fa] hover:bg-[#2968c8] text-white font-semibold py-3.5 rounded-md transition-colors text-base shadow-sm">
+                                    <button
+                                        onClick={() => {
+                                            if (handleAddToCart()) {
+                                                onClose();
+                                                navigate('/cart');
+                                            }
+                                        }}
+                                        className="w-full bg-[#3483fa] hover:bg-[#2968c8] text-white font-semibold py-3.5 rounded-md transition-colors text-base shadow-sm"
+                                    >
                                         Comprar agora
                                     </button>
                                     <button
                                         onClick={() => {
-                                            const optionsList = Object.values(selectedOptions);
-                                            // Check required
-                                            const missing = productGroups.filter(g => g.min > 0 && !selectedOptions[g.id]);
-                                            if (missing.length > 0) {
-                                                alert(`Por favor, selecione: ${missing.map(g => g.title).join(', ')}`);
-                                                return;
+                                            if (handleAddToCart()) {
+                                                onClose();
                                             }
-
-                                            onAddToCart(product, quantity, optionsList); // We might need to adjust onAddToCart signature or pass variation differently
-                                            onClose();
                                         }}
                                         className="w-full bg-[#3483fa]/15 text-[#3483fa] hover:bg-[#3483fa]/20 font-semibold py-3.5 rounded-md transition-colors text-base"
                                     >
