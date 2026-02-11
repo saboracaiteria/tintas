@@ -1625,13 +1625,14 @@ const HomePage = () => {
                     </a>
                   </div>
 
-                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                  <div className="flex overflow-x-auto pb-4 gap-3 snap-x no-scrollbar md:grid md:grid-cols-4 lg:grid-cols-5 md:gap-4 md:overflow-visible md:pb-0 px-1">
                     {catProducts.map(product => (
-                      <MLProductCard
-                        key={product.id}
-                        product={product}
-                        onClick={() => setSelectedProduct(product)}
-                      />
+                      <div key={product.id} className="min-w-[150px] max-w-[150px] snap-start md:min-w-0 md:max-w-none flex-shrink-0">
+                        <MLProductCard
+                          product={product}
+                          onClick={() => setSelectedProduct(product)}
+                        />
+                      </div>
                     ))}
                   </div>
                 </div>
@@ -4236,9 +4237,9 @@ const AppContent = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-brand-purple">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#ff6b00]">
         <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-white mb-4"></div>
-        <p className="text-white text-lg font-bold animate-pulse">SUAS CORES PREFERIDAS SOMENTE AQUI</p>
+        <p className="text-white text-lg font-bold animate-pulse">CASA DAS CORES - CARREGANDO...</p>
       </div>
     );
   }

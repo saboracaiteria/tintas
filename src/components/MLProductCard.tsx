@@ -98,25 +98,25 @@ export const MLProductCard: React.FC<MLProductCardProps> = ({ product, onClick }
             </div>
 
             {/* Info Container */}
-            <div className="p-4 flex flex-col flex-grow relative">
+            <div className="p-3 md:p-4 flex flex-col flex-grow relative">
                 {/* Product Name */}
                 <div className="mb-2">
-                    <h3 className="text-gray-800 font-semibold text-sm leading-snug line-clamp-2 min-h-[2.5em] group-hover:text-orange-600 transition-colors duration-300">
+                    <h3 className="text-gray-800 font-semibold text-xs md:text-sm leading-snug line-clamp-2 min-h-[2.5em] group-hover:text-orange-600 transition-colors duration-300">
                         {product.name}
                     </h3>
                 </div>
 
-                {/* Shipping Info */}
+                {/* Shipping Info - Hide on very small screens if needed, or keep small */}
                 <div className="flex items-center gap-1.5 mb-2">
                     <Truck size={12} className="text-green-600" />
-                    <span className="text-[10px] text-green-600 font-semibold">Envio disponível</span>
+                    <span className="text-[10px] text-green-600 font-semibold truncate">Envio disponível</span>
                 </div>
 
                 {/* Price Section */}
-                <div className="mt-auto pt-3 border-t border-gray-100">
+                <div className="mt-auto pt-2 md:pt-3 border-t border-gray-100">
                     {hasPromo && (
                         <div className="flex items-center gap-2 mb-1">
-                            <span className="text-xs text-gray-400 line-through">
+                            <span className="text-[10px] md:text-xs text-gray-400 line-through">
                                 {formatCurrency(product.price)}
                             </span>
                             <span
@@ -134,7 +134,7 @@ export const MLProductCard: React.FC<MLProductCardProps> = ({ product, onClick }
                     <div className="flex items-end justify-between">
                         <div>
                             <span
-                                className="text-xl font-extrabold"
+                                className="text-lg md:text-xl font-extrabold"
                                 style={{
                                     background: 'linear-gradient(135deg, #1a2351, #263074)',
                                     WebkitBackgroundClip: 'text',
@@ -143,20 +143,20 @@ export const MLProductCard: React.FC<MLProductCardProps> = ({ product, onClick }
                             >
                                 {formatCurrency(currentPrice!)}
                             </span>
-                            <p className="text-[10px] text-gray-400 mt-0.5">
-                                em até 10x de {formatCurrency(currentPrice! / 10)}
+                            <p className="text-[9px] md:text-[10px] text-gray-400 mt-0.5 line-clamp-1">
+                                10x {formatCurrency(currentPrice! / 10)}
                             </p>
                         </div>
 
                         {/* Mobile Add Button */}
                         <div
-                            className="md:hidden w-9 h-9 rounded-full flex items-center justify-center text-white shadow-md active:scale-90 transition-transform"
+                            className="md:hidden w-8 h-8 rounded-full flex items-center justify-center text-white shadow-md active:scale-90 transition-transform"
                             style={{
                                 background: 'linear-gradient(135deg, #f26522, #e85520)',
                                 boxShadow: '0 4px 12px rgba(242, 101, 34, 0.35)',
                             }}
                         >
-                            <Plus size={18} />
+                            <Plus size={16} />
                         </div>
                     </div>
                 </div>
