@@ -1,0 +1,107 @@
+import { createClient } from '@supabase/supabase-js';
+import dotenv from 'dotenv';
+// import fetch from 'node-fetch'; // Usar fetch nativo do Node 18+
+
+dotenv.config({ path: '.env.local' });
+
+console.log('🚀 Script iniciado...'); // Log imediato para debug
+
+const supabase = createClient(
+    process.env.VITE_SUPABASE_URL!,
+    process.env.VITE_SUPABASE_ANON_KEY!
+);
+
+async function fetchGoogleImagesScrape(query: string): Promise<string | null> {
+    try {
+        console.log(`🔎 Scraping Google: "${query}"...`);
+
+        // Usar interface móvel antiga do Google (mais fácil de parsear)
+        const url = `https://www.google.com/m/search?q=${encodeURIComponent(query)}&tbm=isch`;
+
+        const res = await fetch(url, {
+            headers: {
+                // User-Agent genérico de celular
+                'User-Agent': 'Mozilla/5.0 (Linux; Android 10; SM-G960F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.181 Mobile Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                'Accept-Language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7'
+            }
+        });
+
+        if (!res.ok) {
+            console.warn(`⚠️ Google recusou conexão: ${res.status}`);
+            return null;
+        }
+
+        const html = await res.text();
+
+        // Regex para encontrar imagens na versão mobile
+        // O padrão geralmente é <img src="http..." ...> dentro de tabelas ou divs
+        // Vamos procurar links diretos de imagem jpg/png ou o src da thumb
+
+        // Tenta encontrar a primeira imagem de resultado (que não seja ícone do Google)
+        // Na interface mobile, as imagens de resultado costumam ter class="yWs4tf" ou estar em tags a > img
+
+        // Regex simplificada para pegar srcs de imagens que começam com http
+        const imgRegex = /<img[^>]+src="(https:\/\/[^"]+)"[^>]*>/g;
+        let match;
+
+        while ((match = imgRegex.exec(html)) !== null) {
+            const src = match[1];
+            // Filtrar logos do Google e ícones pequenos
+            if (src.includes('gstatic.com') && !src.includes('favicon')) {
+                // Gstatic geralmente é a thumbnail hospedada pelo Google (seguro e rápido)
+                return src;
+            }
+            if (src.includes('googleusercontent.com')) return src;
+        }
+
+        return null;
+
+    } catch (e) {
+        console.error('❌ Erro no scrape:', e);
+        return null;
+    }
+}
+
+async function run() {
+    console.log('🚀 Iniciando atualização VIA SCRAPING (Sem API Key)...');
+
+    const { data: products } = await supabase
+        .from('products')
+        .select('id, name')
+        .order('name');
+    // .limit(5); // LIMITADO A 5 PARA TESTE
+
+    if (!products) {
+        console.error('❌ Nenhum produto encontrado ou erro no Supabase.');
+        return;
+    }
+
+    let updated = 0;
+
+    for (const product of products) {
+        // Busca
+        const url = await fetchGoogleImagesScrape(product.name + ' material construção');
+
+        if (url) {
+            const { error } = await supabase
+                .from('products')
+                .update({ image: url })
+                .eq('id', product.id);
+
+            if (!error) {
+                console.log(`✅ ${product.name} => ${url.substring(0, 30)}...`);
+                updated++;
+            }
+        } else {
+            console.warn(`⚠️ Não achou: ${product.name}`);
+        }
+
+        // Delay amigável para não ser bloqueado (Google é chato)
+        await new Promise(r => setTimeout(r, 3000));
+    }
+
+    console.log(`\n🏁 Concluído! Atualizados: ${updated}`);
+}
+
+run();
