@@ -41,16 +41,21 @@ async function fetchGoogleImagesScrape(query: string): Promise<string | null> {
         // Tenta encontrar a primeira imagem de resultado (que não seja ícone do Google)
         // Na interface mobile, as imagens de resultado costumam ter class="yWs4tf" ou estar em tags a > img
 
-        // Regex simplificada para pegar srcs de imagens que começam com http
-        const imgRegex = /<img[^>]+src="(https:\/\/[^"]+)"[^>]*>/g;
-        let match;
+        // Regex simplificada        // Regex simplificada para pegar srcs de imagens que começam com http
+        // const imgRegex = /<img[^>]+src="(https:\/\/[^"]+)"[^>]*>/g; 
 
+        // Tenta pegar imagens dentro de divisões de resultados clássicos (table, div class yWs4tf)
+        // O Google mobile costuma retornar <img src="..."> bem direto
+
+        const imgRegex = /<img[^>]+src="(https?:\/\/[^"]+)"/g;
+
+        let match;
         while ((match = imgRegex.exec(html)) !== null) {
             const src = match[1];
 
             // FILTRO DE QUALIDADE (Blacklist)
             if (
-                src.includes('gstatic.com') || // Thumbnails do Google (ok, mas priorizar outros se der)
+                src.includes('gstatic.com') || // Thumbnails do Google (ok)
                 src.includes('favicon') ||
                 src.includes('fbcdn') ||       // Facebook
                 src.includes('facebook') ||
@@ -58,14 +63,34 @@ async function fetchGoogleImagesScrape(query: string): Promise<string | null> {
                 src.includes('whatsapp') ||
                 src.includes('assets') ||      // Assets genéricos
                 src.includes('icon') ||
-                src.includes('logo')
+                src.includes('logo') ||
+                src.includes('aaa') // Exemplo
             ) {
+                // Se for gstatic, é aceitável SE não houver opção melhor, mas o loop continua
+                if (src.includes('gstatic.com')) {
+                    // return src; // HABILITAR SE QUISER ACEITAR O PRIMEIRO GSTATIC
+                }
                 continue;
             }
 
-            // Se passou no filtro, é uma imagem candidata
+            // Se passou no filtro e não é gstatic (ou seja, é imagem externa), prioriza
             return src;
         }
+
+        // SE não achou imagem externa, tenta de novo aceitando gstatic (thumbnail do google)
+        // Reset regex lastIndex? Não precisa pois vamos fazer novo loop ou nova regex
+        // Vamos fazer um "fallback" simples: rodar o regex de novo e pegar o primeiro gstatic aceitável
+
+        const fallbackRegex = /<img[^>]+src="(https?:\/\/[^"]+)"/g;
+        while ((match = fallbackRegex.exec(html)) !== null) {
+            const src = match[1];
+            if (src.includes('gstatic.com') && !src.includes('favicon') && !src.includes('icon')) {
+                return src;
+            }
+        }
+
+        console.warn(`⚠️ HTML length: ${html.length} (Pode ser captcha ou estrutura diferente)`);
+        // console.log(html.substring(0, 500)); // Descomentar se precisar ver o HTML
 
         return null;
 
