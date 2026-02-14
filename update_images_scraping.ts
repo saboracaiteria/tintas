@@ -47,12 +47,24 @@ async function fetchGoogleImagesScrape(query: string): Promise<string | null> {
 
         while ((match = imgRegex.exec(html)) !== null) {
             const src = match[1];
-            // Filtrar logos do Google e ícones pequenos
-            if (src.includes('gstatic.com') && !src.includes('favicon')) {
-                // Gstatic geralmente é a thumbnail hospedada pelo Google (seguro e rápido)
-                return src;
+
+            // FILTRO DE QUALIDADE (Blacklist)
+            if (
+                src.includes('gstatic.com') || // Thumbnails do Google (ok, mas priorizar outros se der)
+                src.includes('favicon') ||
+                src.includes('fbcdn') ||       // Facebook
+                src.includes('facebook') ||
+                src.includes('instagram') ||
+                src.includes('whatsapp') ||
+                src.includes('assets') ||      // Assets genéricos
+                src.includes('icon') ||
+                src.includes('logo')
+            ) {
+                continue;
             }
-            if (src.includes('googleusercontent.com')) return src;
+
+            // Se passou no filtro, é uma imagem candidata
+            return src;
         }
 
         return null;
@@ -64,7 +76,8 @@ async function fetchGoogleImagesScrape(query: string): Promise<string | null> {
 }
 
 async function run() {
-    console.log('🚀 Iniciando atualização VIA SCRAPING (Sem API Key)...');
+    console.log('🚀 Iniciando atualização VIA SCRAPING (V2 - Sem Facebook)...');
+    console.log('🛑 Parando scripts anteriores...');
 
     const { data: products } = await supabase
         .from('products')
@@ -80,8 +93,9 @@ async function run() {
     let updated = 0;
 
     for (const product of products) {
-        // Busca
-        const url = await fetchGoogleImagesScrape(product.name + ' material construção');
+        // Busca com exclusão de sites sociais
+        const query = `${product.name} material construção -site:facebook.com -site:instagram.com -site:pinterest.com`;
+        const url = await fetchGoogleImagesScrape(query);
 
         if (url) {
             const { error } = await supabase
