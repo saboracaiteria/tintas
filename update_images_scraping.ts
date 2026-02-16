@@ -64,7 +64,8 @@ async function fetchGoogleImagesScrape(query: string): Promise<string | null> {
                 src.includes('assets') ||      // Assets genéricos
                 src.includes('icon') ||
                 src.includes('logo') ||
-                src.includes('aaa') // Exemplo
+                src.includes('kpui/social') || // Ícones sociais do Google
+                src.includes('fb_')            // Ícones do FB (ex: fb_32x32)
             ) {
                 // Se for gstatic, é aceitável SE não houver opção melhor, mas o loop continua
                 if (src.includes('gstatic.com')) {
@@ -84,7 +85,14 @@ async function fetchGoogleImagesScrape(query: string): Promise<string | null> {
         const fallbackRegex = /<img[^>]+src="(https?:\/\/[^"]+)"/g;
         while ((match = fallbackRegex.exec(html)) !== null) {
             const src = match[1];
-            if (src.includes('gstatic.com') && !src.includes('favicon') && !src.includes('icon')) {
+            if (
+                src.includes('gstatic.com') &&
+                !src.includes('favicon') &&
+                !src.includes('icon') &&
+                !src.includes('kpui/social') &&
+                !src.includes('fb_') &&
+                !src.includes('logo')
+            ) {
                 return src;
             }
         }

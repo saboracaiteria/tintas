@@ -32,7 +32,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onCtaClick }) => {
             <div className="relative h-full max-w-7xl mx-auto px-4 flex flex-col justify-center items-start text-white">
 
                 {/* Badge / Tag */}
-                <div className="mb-3 md:mb-4 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md border border-white/20 text-[10px] md:text-xs font-semibold uppercase tracking-wider animate-fade-in-up">
+                <div className="mb-3 md:mb-4 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-black/40 border border-white/20 text-[10px] md:text-xs font-semibold uppercase tracking-wider animate-fade-in-up">
                     <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
                     {settings.storeStatus === 'open' ? 'Loja Aberta' : 'Entregas Rápidas'}
                 </div>
@@ -80,7 +80,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onCtaClick }) => {
                     </button>
 
                     <button
-                        className="px-6 py-3 md:px-8 md:py-4 bg-white/10 backdrop-blur-md border border-white/30 text-white font-bold rounded-full hover:bg-white/20 transition-all duration-300 text-sm md:text-base hidden sm:block"
+                        className="px-6 py-3 md:px-8 md:py-4 bg-black/40 border border-white/30 text-white font-bold rounded-full hover:bg-black/50 transition-all duration-300 text-sm md:text-base hidden sm:block"
                         onClick={() => {
                             const contactSection = document.getElementById('contact-footer');
                             contactSection?.scrollIntoView({ behavior: 'smooth' });
@@ -90,7 +90,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onCtaClick }) => {
                     </button>
                     {/* Mobile Only Secondary Button */}
                     <button
-                        className="px-6 py-3 bg-white/10 backdrop-blur-md border border-white/30 text-white font-bold rounded-full hover:bg-white/20 transition-all duration-300 text-sm sm:hidden"
+                        className="px-6 py-3 bg-black/40 border border-white/30 text-white font-bold rounded-full hover:bg-black/50 transition-all duration-300 text-sm sm:hidden"
                         onClick={() => {
                             const contactSection = document.getElementById('contact-footer');
                             contactSection?.scrollIntoView({ behavior: 'smooth' });
