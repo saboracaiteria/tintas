@@ -20,11 +20,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onCtaClick }) => {
                 style={{ backgroundImage: `url(${backgroundImage})` }}
             />
 
-            {/* Gradient Overlay - Azul Navy Inova */}
+            {/* Gradient Overlay - Azul Navy Inova (Reduced Opacity for Clarity) */}
             <div
                 className="absolute inset-0"
                 style={{
-                    background: 'linear-gradient(to top, rgba(26, 35, 81, 0.70) 0%, rgba(26, 35, 81, 0.25) 40%, rgba(26, 35, 81, 0.15) 100%)',
+                    background: 'linear-gradient(to top, rgba(26, 35, 81, 0.4) 0%, rgba(26, 35, 81, 0.1) 40%, rgba(26, 35, 81, 0.0) 100%)',
                 }}
             />
 
