@@ -126,8 +126,17 @@ async function run() {
     let updated = 0;
 
     for (const product of products) {
+        let queryName = product.name;
+
+        // Regras de marca específicas (Solicitado pelo usuário)
+        if (queryName.toLowerCase().includes('trabalha')) {
+            queryName += ' Leinertex';
+        } else if (queryName.toLowerCase().includes('destak')) {
+            queryName += ' Veloz';
+        }
+
         // Busca com exclusão de sites sociais
-        const query = `${product.name} material construção -site:facebook.com -site:instagram.com -site:pinterest.com`;
+        const query = `${queryName} material construção -site:facebook.com -site:instagram.com -site:pinterest.com`;
         const url = await fetchGoogleImagesScrape(query);
 
         if (url) {
