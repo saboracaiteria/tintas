@@ -1199,7 +1199,7 @@ const Header = () => {
   const { setSidebarOpen } = useApp();
   return (
     <div
-      className="h-16 flex items-center justify-between px-4 sticky top-0 z-40 transition-all duration-300 backdrop-blur-glass shadow-sm"
+      className="h-16 flex items-center justify-between px-4 sticky top-0 z-40 transition-all duration-300 bg-[#4E0797] shadow-sm"
       style={{
         background: 'linear-gradient(to right, var(--color-header-bg, #4E0797), #ff8f3c)',
         borderBottom: '1px solid rgba(255,255,255,0.1)'
