@@ -29,7 +29,7 @@ const groupMap = new Map();
 const productMap = new Map();
 
 async function populateDB() {
-    console.log('🚀 Iniciando população do banco de dados (Casa das Cores)...');
+    console.log('🚀 Iniciando população do banco de dados (Paulista Materiais)...');
 
     try {
         // 1. SETTINGS
@@ -164,7 +164,7 @@ async function populateDB() {
         if (coupError) throw new Error(`Erro coupons: ${coupError.message}`);
         console.log(`✅ ${dbCoupons.length} cupons inseridos.`);
 
-        console.log('\n🎉 SUCESSO! Banco de dados populado com dados da Casa das Cores.');
+        console.log('\n🎉 SUCESSO! Banco de dados populado com dados da Paulista Materiais.');
 
     } catch (err) {
         console.error('\n❌ ERRO FATAL:', err.message);

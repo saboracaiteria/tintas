@@ -159,7 +159,7 @@ const Footer = () => {
         {/* Location & Year */}
         <div className="text-center mb-3">
           <p className="text-sm">{settings.businessAddress || "Canaã dos Carajás - PA"}</p>
-          <p className="text-xs text-gray-400 mt-1">{settings.copyrightText || "© 2025 Casa das Cores"}</p>
+          <p className="text-xs text-gray-400 mt-1">{settings.copyrightText || "© 2025 Paulista Materiais"}</p>
         </div>
 
         {/* Developer Credit */}
@@ -208,7 +208,7 @@ const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [orders, setOrders] = useState<OrderRecord[]>([]);
   const [settings, setSettings] = useState<GlobalSettings>({
-    storeName: 'Casa das Cores',
+    storeName: 'Paulista Materiais',
     logoUrl: LOGO_URL,
     logoShape: 'circle',
     bannerUrl: '',
@@ -450,8 +450,8 @@ const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
         console.log('[DEBUG] All fetches finished');
       } else {
-        // Offline Mode: Load mock data (Casa das Cores)
-        console.warn("⚠️ MODO OFFLINE: Carregando dados mock da Casa das Cores...");
+        // Offline Mode: Load mock data (Paulista Materiais)
+        console.warn("⚠️ MODO OFFLINE: Carregando dados mock da Paulista Materiais...");
         setProducts(mockProducts);
         setCategories(mockCategories);
         setGroups(mockGroups);
@@ -593,7 +593,7 @@ const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { data } = await supabase.from('settings').select('*').single();
     if (data) {
       setSettings({
-        storeName: data.store_name || 'Casa das Cores',
+        storeName: data.store_name || 'Paulista Materiais',
         logoUrl: data.logo_url,
         logoShape: data.logo_shape || 'circle',
         bannerUrl: data.banner_url,
@@ -610,7 +610,7 @@ const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         deliveryCloseTime: data.delivery_close_time || '21:00',
         instagramUrl: data.instagram_url || '',
         businessAddress: data.business_address || '',
-        copyrightText: data.copyright_text || "© 2025 Casa das Cores",
+        copyrightText: data.copyright_text || "© 2025 Paulista Materiais",
         productDetailSettings: data.product_detail_settings || {}
       });
     }
@@ -3697,7 +3697,7 @@ const SettingsPage = () => {
                 type="text"
                 value={settings.copyrightText || ''}
                 onChange={(e) => updateSettings({ copyrightText: e.target.value })}
-                placeholder="Ex: © 2025 Casa das Cores"
+                placeholder="Ex: © 2025 Paulista Materiais"
                 className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-purple-500 outline-none"
               />
             </div>
@@ -4275,7 +4275,7 @@ const AppContent = () => {
         style={{ backgroundColor: '#ff6b00', position: 'fixed', inset: 0, zIndex: 9999 }}
       >
         <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-white mb-4"></div>
-        <p className="text-white text-lg font-bold animate-pulse">CASA DAS CORES - CARREGANDO...</p>
+        <p className="text-white text-lg font-bold animate-pulse">PAULISTA MATERIAIS - CARREGANDO...</p>
       </div>
     );
   }

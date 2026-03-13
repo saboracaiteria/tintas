@@ -19,9 +19,9 @@ export default defineConfig(({ mode }) => {
         selfDestroying: true,
         includeAssets: ['favicon.ico', 'apple-touch-icon.png'],
         manifest: {
-          name: 'Casa das Cores',
-          short_name: 'Casa das Cores',
-          description: 'Loja de Tintas e Acabamentos',
+          name: 'Paulista Materiais',
+          short_name: 'Paulista Materiais',
+          description: 'Construção e Acabamentos',
           theme_color: '#ff6b00',
           icons: [
             {

@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.casadascores.app',
-  appName: 'Casa das Cores',
+  appId: 'com.paulistamateriais.app',
+  appName: 'Paulista Materiais',
   webDir: 'dist'
 };
 

@@ -1,7 +1,7 @@
 import { Category, Product, ProductGroup, Coupon } from './types';
 
 // ========================================
-// CASA DAS CORES - LOJA DE TINTAS
+// PAULISTA MATERIAIS - LOJA DE MATERIAIS
 // ========================================
 
 // Generic placeholder images from Unsplash (reliable & free)
@@ -365,8 +365,8 @@ export const coupons: Coupon[] = [
 
 // Configurações da loja
 export const mockSettings = {
-    storeName: 'Casa das Cores',
-    logoUrl: 'https://ui-avatars.com/api/?name=Casa+Cores&background=ff6b00&color=fff&size=256&font-size=0.33',
+    storeName: 'Paulista Materiais',
+    logoUrl: 'https://ui-avatars.com/api/?name=Paulista+Materiais&background=ff6b00&color=fff&size=256&font-size=0.33',
     logoShape: 'circle',
     bannerUrl: 'https://images.unsplash.com/photo-1562259949-e8e7689d7828?w=1200&h=400&fit=crop',
     whatsappNumber: '5594999999999',
@@ -380,7 +380,7 @@ export const mockSettings = {
     pickupTime: 'Pronto em 30min',
     deliveryCloseTime: '18:00',
     businessAddress: 'Av. das Indústrias, 500 - Distrito Industrial',
-    copyrightText: '© 2025 Casa das Cores Tintas Ltda',
+    copyrightText: '© 2025 Paulista Materiais Ltda',
     themeColors: {
         headerBg: '#ff6b00',
         headerText: '#ffffff',

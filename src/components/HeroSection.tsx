@@ -48,7 +48,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onCtaClick }) => {
                             textShadow: '0 4px 16px rgba(242, 101, 34, 0.4), 0 2px 4px rgba(0,0,0,0.3)',
                         }}
                     >
-                        {settings.storeName || "Inova Tintas"}
+                        {settings.storeName || "Paulista Materiais"}
                     </span>
                     <span
                         className="block text-xl md:text-4xl font-extrabold text-white mt-1"

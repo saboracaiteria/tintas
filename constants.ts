@@ -1,11 +1,11 @@
 import { Category, Product, ProductGroup, Coupon, OrderRecord, DeliveryMethod } from './types';
 
 // ========================================
-// CASA DAS CORES - CONSTANTES
+// PAULISTA MATERIAIS - CONSTANTES
 // ========================================
 
 export const WHATSAPP_NUMBER = "5594999999999";
-export const LOGO_URL = "https://ui-avatars.com/api/?name=Casa+Cores&background=ff6b00&color=fff&size=256&font-size=0.33";
+export const LOGO_URL = "https://ui-avatars.com/api/?name=Paulista+Materiais&background=ff6b00&color=fff&size=256&font-size=0.33";
 
 // Categories, Products, Groups are now loaded from mockData.ts
 // These are kept empty for backward compatibility with any imports

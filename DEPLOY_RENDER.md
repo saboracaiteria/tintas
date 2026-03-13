@@ -1,6 +1,6 @@
 # 🚀 Como Fazer Deploy no Render
 
-Siga este guia passo-a-passo para colocar o **Casa das Cores** online gratuitamente usando o Render.
+Siga este guia passo-a-passo para colocar o **Paulista Materiais** online gratuitamente usando o Render.
 
 ## 1. Crie sua conta no Render
 Acesse [render.com](https://render.com) e crie uma conta usando seu **GitHub**.
@@ -20,7 +20,7 @@ Preencha o formulário com as seguintes informações:
 
 | Campo | Valor |
 |---|---|
-| **Name** | `casa-das-cores` (ou o nome que preferir) |
+| **Name** | `paulista-materiais` (ou o nome que preferir) |
 | **Branch** | `main` |
 | **Root Directory** | `.` (deixe como está) |
 | **Build Command** | `npm run build` |
@@ -50,7 +50,7 @@ Como o site é uma SPA (Single Page Application), precisamos garantir que ao rec
 ## 7. Finalizar
 Clique em **Create Static Site**.
 
-O Render vai começar a baixar o código, instalar as dependências e fazer o build. Isso leva uns 2-3 minutos. Quando terminar, você verá um link do tipo `https://casa-das-cores.onrender.com`.
+O Render vai começar a baixar o código, instalar as dependências e fazer o build. Isso leva uns 2-3 minutos. Quando terminar, você verá um link do tipo `https://paulista-materiais.onrender.com`.
 
 ---
 

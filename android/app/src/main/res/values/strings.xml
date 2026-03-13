@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Casa das Cores</string>
-    <string name="title_activity_main">Casa das Cores</string>
+    <string name="app_name">Paulista Materiais</string>
+    <string name="title_activity_main">Paulista Materiais</string>
     <string name="package_name">com.sabor.acai</string>
     <string name="custom_url_scheme">com.sabor.acai</string>
 </resources>
